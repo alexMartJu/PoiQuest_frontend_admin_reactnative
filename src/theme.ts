@@ -52,8 +52,30 @@ export const appPaletteDark: AppPalette = {
 };
 
 // ================== EXTENDED MD3 THEME TYPE ==================
+// ================== SPACING ==================
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+// ================== BORDER RADIUS ==================
+export const borderRadius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  round: 9999,
+};
+
+// ================== EXTENDED MD3 THEME TYPE ==================
 export interface ExtendedTheme extends MD3Theme {
   appPalette: AppPalette;
+  spacing: typeof spacing;
+  borderRadius: typeof borderRadius;
 }
 
 // ================== TYPOGRAPHY ==================
@@ -68,35 +90,35 @@ export const typography = {
   headlineMedium: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 24,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0,
     lineHeight: 32,
   },
   headlineSmall: {
     fontFamily: 'Roboto_500Medium',
-    fontSize: 24,
-    fontWeight: '600' as const,
+    fontSize: 20,
+    fontWeight: '500' as const,
     letterSpacing: 0,
-    lineHeight: 32,
+    lineHeight: 28,
   },
   titleLarge: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 20,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0,
     lineHeight: 28,
   },
   titleMedium: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 18,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0.25,
     lineHeight: 24,
   },
   titleSmall: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0.1,
     lineHeight: 20,
   },
@@ -124,16 +146,16 @@ export const typography = {
   labelLarge: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0.1,
     lineHeight: 20,
   },
   labelMedium: {
     fontFamily: 'Roboto_500Medium',
-    fontSize: 14,
-    fontWeight: '600' as const,
+    fontSize: 12,
+    fontWeight: '500' as const,
     letterSpacing: 0.5,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   labelSmall: {
     fontFamily: 'Roboto_400Regular',
@@ -153,14 +175,14 @@ export const typography = {
   displayMedium: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 24,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0,
     lineHeight: 32,
   },
   displaySmall: {
     fontFamily: 'Roboto_500Medium',
     fontSize: 20,
-    fontWeight: '600' as const,
+    fontWeight: '500' as const,
     letterSpacing: 0,
     lineHeight: 28,
   },
@@ -176,6 +198,8 @@ export const typography = {
 export const lightTheme: ExtendedTheme = {
   ...MD3LightTheme,
   appPalette: appPaletteLight,
+  spacing,
+  borderRadius,
   colors: {
     ...MD3LightTheme.colors,
     primary: appPaletteLight.primary,
@@ -214,6 +238,8 @@ export const lightTheme: ExtendedTheme = {
 export const darkTheme: ExtendedTheme = {
   ...MD3DarkTheme,
   appPalette: appPaletteDark,
+  spacing,
+  borderRadius,
   colors: {
     ...MD3DarkTheme.colors,
     primary: appPaletteDark.primary,
@@ -248,27 +274,6 @@ export const darkTheme: ExtendedTheme = {
   roundness: 12,
 };
 
-// ================== SPACING ==================
-export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-};
-
-// ================== BORDER RADIUS ==================
-export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  round: 9999,
-};
-
 // Tipo exportado para tipado del tema en la app
 export type AppTheme = typeof lightTheme;
 
-// Hook tipado para usar el theme con useTheme()
-export const useAppTheme = () => useTheme<AppTheme>();
