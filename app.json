@@ -3,10 +3,14 @@
     "name": "poiquest_frontend_admin_reactnative",
     "slug": "poiquest_frontend_admin_reactnative",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "poiquest",
+    "router": {
+      "root": "./src/app"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -25,6 +29,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "orientationNote": "Se usa 'default' para permitir landscape en tablets. Antes 'portrait' provocaba franjas negras (letterboxing) en tablets emuladas.",
+      "why": "Mantener documentación aquí evita romper el parser JSON; para comentarios más largos convertir a app.config.js"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
   }
 }
