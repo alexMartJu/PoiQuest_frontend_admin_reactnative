@@ -2,11 +2,12 @@ import { useCallback, useState, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { FlatList, View, RefreshControl } from 'react-native';
-import { FAB, Portal, Text } from 'react-native-paper';
+import { Portal, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { getEvents } from '@/services/event.service';
 import { EventCardApp } from '@/components/events';
+import { AnimatedFABApp } from '@/components/common';
 import type { Event } from '@/types/Event';
 import { eventsStaticStyles, getEventsStyles } from '@/styles/events.styles';
 
@@ -19,6 +20,8 @@ export default function EventsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [isExtended, setIsExtended] = useState(true);
+  const [isFABVisible, setIsFABVisible] = useState(false);
 
   // Cargar eventos
   const loadEvents = async (cursor?: string, isRefresh = false) => {
@@ -50,7 +53,12 @@ export default function EventsScreen() {
   // Cargar eventos cuando la pantalla se enfoca
   useFocusEffect(
     useCallback(() => {
+      setIsFABVisible(true); // Mostrar FAB cuando la pantalla está enfocada
       loadEvents(undefined, false);
+      
+      return () => {
+        setIsFABVisible(false); // Ocultar FAB cuando la pantalla se desenfoca
+      };
     }, []),
   );
 
@@ -81,6 +89,12 @@ export default function EventsScreen() {
     <EventCardApp event={item} onPress={() => handleEventPress(item.uuid)} />
   );
 
+  // Manejar scroll para animar el FAB
+  const handleScroll = ({ nativeEvent }: any) => {
+    const currentScrollPosition = Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
+    setIsExtended(currentScrollPosition <= 0);
+  };
+
   return (
     <View style={[eventsStaticStyles.container, themed.container]}>
       <FlatList
@@ -91,6 +105,7 @@ export default function EventsScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
+        onScroll={handleScroll}
         ListEmptyComponent={
           <View style={eventsStaticStyles.emptyContainer}>
             <MaterialCommunityIcons name="calendar-blank" size={80} color={theme.colors.onSurfaceVariant} />
@@ -102,12 +117,14 @@ export default function EventsScreen() {
       />
 
       <Portal>
-        <FAB
+        <AnimatedFABApp
           icon="plus"
-          style={[eventsStaticStyles.fab, themed.fab]}
-          color={theme.colors.onPrimary}
-          onPress={handleCreateEvent}
           label="Crear Evento"
+          extended={isExtended}
+          visible={isFABVisible}
+          onPress={handleCreateEvent}
+          animateFrom="right"
+          iconMode="dynamic"
         />
       </Portal>
     </View>

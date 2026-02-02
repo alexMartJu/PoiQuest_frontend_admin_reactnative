@@ -245,16 +245,30 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
       <View style={staticStyles.buttonContainer}>
         <ButtonApp
           mode="contained"
+          icon={isCreating ? "plus" : "content-save"}
           onPress={handleSubmit(onSubmit)}
           loading={isSaving}
           disabled={isSaving}
           style={staticStyles.button}
+          buttonColor={themed.buttonContained.backgroundColor}
+          textColor={themed.buttonContained.textColor}
+          accessibilityLabel={isCreating ? "Crear nuevo evento" : "Guardar cambios del evento"}
+          accessibilityHint={isCreating ? "Crea un nuevo evento con los datos ingresados" : "Guarda las modificaciones realizadas al evento"}
         >
           {isCreating ? 'Crear evento' : 'Guardar cambios'}
         </ButtonApp>
 
         {onCancel && (
-          <ButtonApp mode="outlined" onPress={onCancel} disabled={isSaving} style={staticStyles.button}>
+          <ButtonApp 
+            mode="outlined" 
+            icon="close" 
+            onPress={onCancel} 
+            disabled={isSaving} 
+            style={[staticStyles.button, { borderColor: themed.cancelButton.borderColor }]}
+            textColor={themed.cancelButton.textColor}
+            accessibilityLabel="Cancelar edición"
+            accessibilityHint="Descarta los cambios y regresa a la pantalla anterior"
+          >
             Cancelar
           </ButtonApp>
         )}
@@ -306,5 +320,13 @@ const getEventFormStyles = (theme: AppTheme) => ({
   },
   helperText: {
     color: theme.colors.onSurfaceVariant,
+  },
+  buttonContained: {
+    backgroundColor: theme.colors.secondary,
+    textColor: theme.colors.onPrimary,
+  },
+  cancelButton: {
+    borderColor: theme.colors.error,
+    textColor: theme.colors.error,
   },
 });

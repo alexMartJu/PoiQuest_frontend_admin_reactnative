@@ -147,7 +147,7 @@ export default function LoginScreen() {
                     autoComplete="email"
                     textContentType="emailAddress"
                     errorText={errors.email?.message}
-                    left={<TextInput.Icon icon="email-outline" />}
+                    left={<TextInput.Icon icon="email-outline" color={theme.colors.secondary} />}
                     disabled={isSubmitting}
                   />
                 )}
@@ -167,11 +167,13 @@ export default function LoginScreen() {
                     autoComplete="password"
                     textContentType="password"
                     errorText={errors.password?.message}
-                    left={<TextInput.Icon icon="lock-outline" />}
+                    left={<TextInput.Icon icon="lock-outline" color={theme.colors.secondary} />}
                     right={
                       <TextInput.Icon
                         icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
                         onPress={() => setShowPassword(!showPassword)}
+                        color={theme.colors.secondary}
+                        forceTextInputFocus={false}
                       />
                     }
                     disabled={isSubmitting}
@@ -181,12 +183,15 @@ export default function LoginScreen() {
 
               {/* Botón de Login */}
               <ButtonApp
+                icon="login"
                 onPress={handleSubmit(onSubmit)}
                 loading={isSubmitting}
                 disabled={isSubmitting}
                 style={loginStaticStyles.loginButton}
                 buttonColor={theme.colors.primary}
                 textColor={theme.colors.onPrimary}
+                accessibilityLabel="Iniciar sesión en PoiQuest Admin"
+                accessibilityHint="Inicia sesión con tu cuenta de administrador"
               >
                 Iniciar sesión
               </ButtonApp>

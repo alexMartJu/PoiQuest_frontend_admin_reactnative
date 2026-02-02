@@ -4,11 +4,13 @@ import { Button } from 'react-native-paper';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import type { AppTheme } from '@/theme';
 
-type BaseProps = ComponentProps<typeof Button>;
+type Props = ComponentProps<typeof Button>;
 
-type Props = BaseProps;
-
-export function ButtonApp({ style, mode = 'contained', ...rest }: Props) {
+export function ButtonApp({ 
+  style, 
+  mode = 'contained',
+  ...rest 
+}: Props) {
   const theme = useAppTheme();
   const themed = useMemo(() => getButtonStyles(theme), [theme]);
 
