@@ -4,6 +4,7 @@ import { useFonts, Roboto_400Regular, Roboto_500Medium, Roboto_700Bold } from '@
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { QueryProvider } from '@/providers/QueryProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 
@@ -23,12 +24,14 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           <AuthProvider>
-            <ThemeProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="login" options={{ animation: 'none' }} />
-                <Stack.Screen name="(protected)" />
-              </Stack>
-            </ThemeProvider>
+            <QueryProvider>
+              <ThemeProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="login" options={{ animation: 'none' }} />
+                  <Stack.Screen name="(protected)" />
+                </Stack>
+              </ThemeProvider>
+            </QueryProvider>
           </AuthProvider>
         </SafeAreaView>
       </SafeAreaProvider>

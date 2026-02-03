@@ -40,6 +40,6 @@ export const STORAGE_KEYS = {
 
 // Configuración de paginación
 export const PAGINATION = {
-  DEFAULT_LIMIT: 10,
-  MAX_LIMIT: 50,
+  DEFAULT_LIMIT: 5,
+  MAX_LIMIT: 5,
 } as const;

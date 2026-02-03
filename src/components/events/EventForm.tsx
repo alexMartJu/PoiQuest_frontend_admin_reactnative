@@ -8,7 +8,7 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 import type { AppTheme } from '@/theme';
 import { createEventSchema, updateEventSchema, CreateEventFormValues, UpdateEventFormValues } from '@/schemas/event.schema';
 import { Event } from '@/types/Event';
-import { createEvent, updateEvent } from '@/services/event.service';
+import { useCreateEventMutation, useUpdateEventMutation } from '@/hooks/queries/events';
 import { router } from 'expo-router';
 
 interface EventFormProps {
@@ -21,7 +21,12 @@ interface EventFormProps {
 export function EventForm({ event, isCreating = false, onSuccess, onCancel }: EventFormProps) {
   const theme = useAppTheme();
   const themed = useMemo(() => getEventFormStyles(theme), [theme]);
-  const [isSaving, setIsSaving] = useState(false);
+
+  // Usar React Query mutations
+  const createMutation = useCreateEventMutation();
+  const updateMutation = useUpdateEventMutation();
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   // Usar el schema correcto según si es creación o edición
   const schema = isCreating ? createEventSchema : updateEventSchema;
@@ -71,19 +76,21 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
   }, [event, isCreating, reset]);
 
   const onSubmit = async (data: CreateEventFormValues | UpdateEventFormValues) => {
-    setIsSaving(true);
     try {
       if (isCreating) {
-        // Crear nuevo evento
-        const created = await createEvent(data as CreateEventFormValues);
+        // Crear nuevo evento usando React Query mutation
+        const created = await createMutation.mutateAsync(data as CreateEventFormValues);
         Alert.alert('Éxito', 'Evento creado correctamente');
         router.replace(`/(protected)/(drawer)/events/${created.uuid}`);
       } else {
-        // Actualizar evento existente
+        // Actualizar evento existente usando React Query mutation
         if (!event) {
           throw new Error('No hay evento para actualizar');
         }
-        await updateEvent(event.uuid, data as UpdateEventFormValues);
+        await updateMutation.mutateAsync({
+          uuid: event.uuid,
+          data: data as UpdateEventFormValues,
+        });
         Alert.alert('Éxito', 'Evento actualizado correctamente');
         if (onSuccess) {
           onSuccess();
@@ -92,8 +99,6 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'No se pudo guardar el evento';
       Alert.alert('Error', message);
-    } finally {
-      setIsSaving(false);
     }
   };
 

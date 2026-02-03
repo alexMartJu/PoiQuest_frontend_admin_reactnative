@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { EventForm } from '@/components/events';
-import { useEventDetail } from '@/hooks/useEventDetail';
+import { useEventDetail } from '@/hooks/events/useEventDetail';
 import { eventDetailStaticStyles, getEventDetailStyles } from '@/styles/events.styles';
 
 export default function EditEventScreen() {

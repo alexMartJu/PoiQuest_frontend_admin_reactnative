@@ -4,7 +4,7 @@ import { Text, IconButton, Chip, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '@/providers/ThemeProvider';
-import { useEventDetail } from '@/hooks/useEventDetail';
+import { useEventDetail } from '@/hooks/events/useEventDetail';
 import { CommonDialogApp } from '@/components/common';
 import { eventDetailStaticStyles, getEventDetailStyles } from '@/styles/events.styles';
 

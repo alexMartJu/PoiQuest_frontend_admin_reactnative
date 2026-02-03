@@ -1,11 +1,11 @@
 import { useCallback, useState, useMemo } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { FlatList, View, RefreshControl } from 'react-native';
+import { FlatList, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '@/providers/ThemeProvider';
-import { getEvents } from '@/services/event.service';
+import { useEventsInfiniteQuery } from '@/hooks/queries/events';
 import { EventCardApp } from '@/components/events';
 import { AnimatedFABApp } from '@/components/common';
 import type { Event } from '@/types/Event';
@@ -15,62 +15,47 @@ export default function EventsScreen() {
   const theme = useAppTheme();
   const themed = useMemo(() => getEventsStyles(theme), [theme]);
   const router = useRouter();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasNextPage, setHasNextPage] = useState(false);
   const [isExtended, setIsExtended] = useState(true);
   const [isFABVisible, setIsFABVisible] = useState(false);
 
-  // Cargar eventos
-  const loadEvents = async (cursor?: string, isRefresh = false) => {
-    if (isRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
+  // Usar React Query Infinite para paginación por scroll
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+    refetch,
+  } = useEventsInfiniteQuery(5); // 10 eventos por página
 
-    try {
-      const response = await getEvents(cursor);
-      
-      if (isRefresh || !cursor) {
-        setEvents(response.data);
-      } else {
-        setEvents((prev) => [...prev, ...response.data]);
-      }
+  // Concatenar todas las páginas en un solo array
+  const events = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) ?? [];
+  }, [data]);
 
-      setNextCursor(response.nextCursor);
-      setHasNextPage(response.hasNextPage);
-    } catch (error) {
-      console.error('Error cargando eventos:', error);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Cargar eventos cuando la pantalla se enfoca
+  // Refrescar eventos cuando la pantalla se enfoca
   useFocusEffect(
     useCallback(() => {
       setIsFABVisible(true); // Mostrar FAB cuando la pantalla está enfocada
-      loadEvents(undefined, false);
+      refetch();
       
       return () => {
         setIsFABVisible(false); // Ocultar FAB cuando la pantalla se desenfoca
       };
-    }, []),
+    }, [refetch]),
   );
 
   // Refrescar eventos
   const handleRefresh = () => {
-    loadEvents(undefined, true);
+    refetch();
   };
 
-  // Cargar más eventos (paginación)
+  // Cargar más eventos al llegar al final (paginación infinita)
   const handleLoadMore = () => {
-    if (hasNextPage && !isLoading && nextCursor) {
-      loadEvents(nextCursor, false);
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -95,6 +80,20 @@ export default function EventsScreen() {
     setIsExtended(currentScrollPosition <= 0);
   };
 
+  // Footer para mostrar spinner al cargar más eventos
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    
+    return (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={theme.colors.primary} />
+        <Text variant="bodySmall" style={{ marginTop: 8, color: theme.colors.onSurfaceVariant }}>
+          Cargando más eventos...
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[eventsStaticStyles.container, themed.container]}>
       <FlatList
@@ -102,17 +101,38 @@ export default function EventsScreen() {
         keyExtractor={(item) => item.uuid}
         renderItem={renderEvent}
         contentContainerStyle={[eventsStaticStyles.listContent, themed.listContent]}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={isFetching && !isLoading} 
+            onRefresh={handleRefresh} 
+          />
+        }
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.3}
         onScroll={handleScroll}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
-          <View style={eventsStaticStyles.emptyContainer}>
-            <MaterialCommunityIcons name="calendar-blank" size={80} color={theme.colors.onSurfaceVariant} />
-            <Text variant="bodyLarge" style={themed.emptyText}>
-              No hay eventos disponibles
-            </Text>
-          </View>
+          isLoading ? (
+            <View style={eventsStaticStyles.emptyContainer}>
+              <Text variant="bodyLarge" style={themed.emptyText}>
+                Cargando eventos...
+              </Text>
+            </View>
+          ) : error ? (
+            <View style={eventsStaticStyles.emptyContainer}>
+              <MaterialCommunityIcons name="alert-circle" size={80} color={theme.colors.error} />
+              <Text variant="bodyLarge" style={{ color: theme.colors.error, textAlign: 'center' }}>
+                {error instanceof Error ? error.message : 'Error al cargar eventos'}
+              </Text>
+            </View>
+          ) : (
+            <View style={eventsStaticStyles.emptyContainer}>
+              <MaterialCommunityIcons name="calendar-blank" size={80} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyLarge" style={themed.emptyText}>
+                No hay eventos disponibles
+              </Text>
+            </View>
+          )
         }
       />
 
