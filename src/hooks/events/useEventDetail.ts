@@ -5,7 +5,6 @@ import { useDeleteEventMutation } from '../queries/events/useEventMutations';
 
 export function useEventDetail() {
   const { uuid } = useLocalSearchParams<{ uuid?: string }>();
-  const isCreating = uuid === 'new';
 
   const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -14,7 +13,7 @@ export function useEventDetail() {
     data: event,
     isLoading,
     isError,
-  } = useEventDetailQuery(uuid, !isCreating);
+  } = useEventDetailQuery(uuid);
 
   // Usar React Query para eliminar evento
   const deleteMutation = useDeleteEventMutation();
@@ -40,11 +39,10 @@ export function useEventDetail() {
 
   return {
     event: event ?? null,
-    isLoading: isCreating ? false : isLoading,
+    isLoading,
     confirmVisible,
     setConfirmVisible,
     isDeleting: deleteMutation.isPending,
-    isCreating,
     handleDeleteEvent,
     handleCancelCreate,
   };
