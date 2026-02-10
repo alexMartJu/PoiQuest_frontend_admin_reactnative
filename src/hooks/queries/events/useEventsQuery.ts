@@ -36,5 +36,9 @@ export function useEventsInfiniteQuery(limit: number = 5) {
     },
     // Mantener datos previos mientras se carga la siguiente página
     placeholderData: (previousData) => previousData,
+    // Los datos son frescos durante 1 minuto (evita refetches innecesarios)
+    staleTime: 1000 * 60,
+    // Refrescar automáticamente cuando la app vuelve al primer plano
+    refetchOnWindowFocus: true,
   });
 }

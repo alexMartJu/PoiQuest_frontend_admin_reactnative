@@ -43,7 +43,7 @@ export function EventCardApp({ event, onPress }: EventCardAppProps) {
           {/* Imagen a la izquierda */}
           <Card.Cover
             source={{
-              uri: event.images[0]?.imageUrl || 'https://via.placeholder.com/400x200',
+              uri: event.images[0]?.url || 'https://via.placeholder.com/400x200',
             }}
             style={[
               staticStyles.cardImage,

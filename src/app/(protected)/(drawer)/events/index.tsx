@@ -28,26 +28,25 @@ export default function EventsScreen() {
     fetchNextPage,
     error,
     refetch,
-  } = useEventsInfiniteQuery(5); // 10 eventos por página
+  } = useEventsInfiniteQuery(5); // 5 eventos por página
 
   // Concatenar todas las páginas en un solo array
   const events = useMemo(() => {
     return data?.pages.flatMap((page) => page.data) ?? [];
   }, [data]);
 
-  // Refrescar eventos cuando la pantalla se enfoca
+  // Mostrar/ocultar FAB cuando la pantalla se enfoca/desenfoca
   useFocusEffect(
     useCallback(() => {
-      setIsFABVisible(true); // Mostrar FAB cuando la pantalla está enfocada
-      refetch();
+      setIsFABVisible(true);
       
       return () => {
-        setIsFABVisible(false); // Ocultar FAB cuando la pantalla se desenfoca
+        setIsFABVisible(false);
       };
-    }, [refetch]),
+    }, []),
   );
 
-  // Refrescar eventos
+  // Refrescar eventos con pull-to-refresh
   const handleRefresh = () => {
     refetch();
   };

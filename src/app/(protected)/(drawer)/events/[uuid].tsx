@@ -74,7 +74,7 @@ export default function EventDetailScreen() {
         {/* Imagen principal */}
         {event.images && event.images.length > 0 && (
           <Image
-            source={{ uri: event.images.find(img => img.isPrimary)?.imageUrl || event.images[0]?.imageUrl }}
+            source={{ uri: event.images.find(img => img.isPrimary)?.url || event.images[0]?.url }}
             style={eventDetailStaticStyles.mainImage}
             resizeMode="cover"
           />
@@ -155,7 +155,7 @@ export default function EventDetailScreen() {
               {event.images.map((image) => (
                 <Image
                   key={image.id}
-                  source={{ uri: image.imageUrl }}
+                  source={{ uri: image.url }}
                   style={[eventDetailStaticStyles.galleryImage, themed.galleryImage]}
                   resizeMode="cover"
                 />

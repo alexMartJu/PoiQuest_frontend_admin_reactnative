@@ -23,8 +23,11 @@ export function useCreateEventMutation() {
   return useMutation({
     mutationFn: (data: CreateEventDto) => createEvent(data),
     onSuccess: () => {
-      // Invalidar la lista de eventos para que se recargue
-      queryClient.invalidateQueries({ queryKey: eventsQueryKey() });
+      // Resetear la infinite query para volver a la primera página
+      // Esto es necesario porque los eventos se ordenan ASC por createdAt,
+      // y el nuevo evento tendría un createdAt reciente (estaría en páginas posteriores).
+      // resetQueries elimina el caché y fuerza un refetch completo desde la primera página.
+      queryClient.resetQueries({ queryKey: eventsQueryKey() });
     },
   });
 }
@@ -53,7 +56,8 @@ export function useUpdateEventMutation() {
     onSuccess: (updatedEvent) => {
       // Invalidar el detalle del evento
       queryClient.invalidateQueries({ queryKey: eventDetailQueryKey(updatedEvent.uuid) });
-      // Invalidar la lista de eventos
+      // Para updates, invalidateQueries es suficiente porque el evento ya existe en la lista
+      // y solo cambian sus datos, no su posición (createdAt no cambia)
       queryClient.invalidateQueries({ queryKey: eventsQueryKey() });
     },
   });

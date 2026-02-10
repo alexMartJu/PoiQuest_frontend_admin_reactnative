@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Switch } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, Image, Pressable, ActivityIndicator } from 'react-native';
+import { Text, IconButton } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TextInputApp, ButtonApp } from '@/components/common';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import type { AppTheme } from '@/theme';
@@ -10,6 +11,8 @@ import { createEventSchema, updateEventSchema, CreateEventFormValues, UpdateEven
 import { Event } from '@/types/Event';
 import { useCreateEventMutation, useUpdateEventMutation } from '@/hooks/queries/events';
 import { router } from 'expo-router';
+import { pickImageFromLibrary } from '@/utils/pickImage';
+import { uploadImage } from '@/services/file.service';
 
 interface EventFormProps {
   event?: Event | null;
@@ -18,9 +21,20 @@ interface EventFormProps {
   onCancel?: () => void;
 }
 
+// Tipo para las imágenes que se están subiendo
+interface SelectedImage {
+  uri: string;
+  fileName?: string;
+  uploaded: boolean;
+}
+
 export function EventForm({ event, isCreating = false, onSuccess, onCancel }: EventFormProps) {
   const theme = useAppTheme();
   const themed = useMemo(() => getEventFormStyles(theme), [theme]);
+
+  // Estado para las imágenes seleccionadas
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
 
   // Usar React Query mutations
   const createMutation = useCreateEventMutation();
@@ -36,6 +50,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<CreateEventFormValues | UpdateEventFormValues>({
     resolver: zodResolver(schema),
     mode: 'onBlur',
@@ -47,7 +62,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           location: '',
           startDate: '',
           endDate: '',
-          imageUrls: [],
+          imageFileNames: [],
         }
       : {
           name: event?.name || '',
@@ -56,7 +71,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           location: event?.location || '',
           startDate: event?.startDate || '',
           endDate: event?.endDate || '',
-          imageUrls: event?.images?.map(img => img.imageUrl) || [],
+          imageFileNames: event?.images?.map(img => img.fileName) || [],
         },
   });
 
@@ -70,16 +85,118 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         location: event.location || '',
         startDate: event.startDate,
         endDate: event.endDate || '',
-        imageUrls: event.images?.map(img => img.imageUrl) || [],
+        imageFileNames: event.images?.map(img => img.fileName) || [],
       });
+      
+      // Cargar las imágenes existentes para mostrar en la UI
+      if (event.images && event.images.length > 0) {
+        setSelectedImages(
+          event.images.map(img => ({
+            uri: img.url, // URL presigned
+            fileName: img.fileName,
+            uploaded: true,
+          }))
+        );
+      }
     }
   }, [event, isCreating, reset]);
 
+  // Handler para seleccionar una imagen
+  const handlePickImage = async () => {
+    try {
+      // Verificar límite de imágenes
+      if (selectedImages.length >= 2) {
+        Alert.alert('Límite alcanzado', 'Solo puedes seleccionar un máximo de 2 imágenes');
+        return;
+      }
+
+      const asset = await pickImageFromLibrary();
+      if (!asset) return; // Usuario canceló
+
+      // Agregar imagen local (aún no subida)
+      setSelectedImages(prev => [...prev, {
+        uri: asset.uri,
+        uploaded: false,
+      }]);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'No se pudo seleccionar la imagen');
+    }
+  };
+
+  // Handler para eliminar una imagen
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => {
+      const next = prev.filter((_, i) => i !== index);
+
+      // Sincronizar con el formulario: eliminar fileName si era subida
+      const uploadedNames = next.filter((i) => i.fileName).map((i) => i.fileName!);
+      setValue('imageFileNames' as any, uploadedNames);
+
+      return next;
+    });
+  };
+
+  // Handler para subir una imagen específica
+  const handleUploadImage = async (index: number) => {
+    const image = selectedImages[index];
+    if (!image || image.uploaded) return;
+
+    try {
+      setUploadingImageIndex(index);
+      const response = await uploadImage(image.uri);
+
+      // Actualizar el estado de la imagen y sincronizar con el formulario
+      setSelectedImages(prev => {
+        const next = prev.map((img, i) =>
+          i === index
+            ? { ...img, fileName: response.fileName, uploaded: true }
+            : img
+        );
+
+        // Sincronizar con el formulario: actualizar imageFileNames
+        const uploadedNames = next.filter((i) => i.fileName).map((i) => i.fileName!);
+        setValue('imageFileNames' as any, uploadedNames);
+
+        return next;
+      });
+
+      Alert.alert('Éxito', 'Imagen subida correctamente');
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'No se pudo subir la imagen');
+    } finally {
+      setUploadingImageIndex(null);
+    }
+  };
+
   const onSubmit = async (data: CreateEventFormValues | UpdateEventFormValues) => {
     try {
+      // Validar que al menos haya una imagen
+      if (selectedImages.length === 0) {
+        Alert.alert('Error', 'Debes seleccionar al menos 1 imagen');
+        return;
+      }
+
+      // Validar que todas las imágenes estén subidas
+      const hasUnuploadedImages = selectedImages.some(img => !img.uploaded);
+      if (hasUnuploadedImages) {
+        Alert.alert('Error', 'Debes subir todas las imágenes antes de guardar');
+        return;
+      }
+
+      // Extraer los fileNames de las imágenes subidas
+      const imageFileNames = selectedImages
+        .filter(img => img.fileName)
+        .map(img => img.fileName!);
+
+      // Agregar imageFileNames al payload
+      const payload = {
+        ...data,
+        imageFileNames,
+      };
+
       if (isCreating) {
         // Crear nuevo evento usando React Query mutation
-        const created = await createMutation.mutateAsync(data as CreateEventFormValues);
+        const created = await createMutation.mutateAsync(payload as CreateEventFormValues);
         Alert.alert('Éxito', 'Evento creado correctamente');
         router.replace(`/(protected)/(drawer)/events/${created.uuid}`);
       } else {
@@ -89,7 +206,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         }
         await updateMutation.mutateAsync({
           uuid: event.uuid,
-          data: data as UpdateEventFormValues,
+          data: payload as UpdateEventFormValues,
         });
         Alert.alert('Éxito', 'Evento actualizado correctamente');
         if (onSuccess) {
@@ -219,32 +336,82 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         </Text>
 
         <Text variant="bodySmall" style={[staticStyles.helperText, themed.helperText]}>
-          Introduce las URLs de las imágenes (mínimo 1, máximo 2). Separa cada URL con una coma.
+          Selecciona entre 1 y 2 imágenes para el evento. Debes subirlas antes de guardar.
         </Text>
 
-        <Controller
-          control={control}
-          name="imageUrls"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <TextInputApp
-              label="URLs de imágenes *"
-              value={Array.isArray(value) ? value.join(', ') : ''}
-              onChangeText={(text) => {
-                const urls = text
-                  .split(',')
-                  .map(url => url.trim())
-                  .filter(url => url.length > 0);
-                onChange(urls);
-              }}
-              onBlur={onBlur}
-              errorText={errors.imageUrls?.message || (Array.isArray(errors.imageUrls) && errors.imageUrls[0]?.message)}
-              multiline
-              numberOfLines={3}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-              autoCapitalize="none"
+        {/* Lista de imágenes seleccionadas */}
+        {selectedImages.map((image, index) => (
+          <View key={index} style={staticStyles.imagePreviewContainer}>
+            <Image
+              source={{ uri: image.uri }}
+              style={staticStyles.imagePreview}
+              resizeMode="cover"
             />
-          )}
-        />
+            
+            <View style={staticStyles.imageActions}>
+              {/* Estado de la imagen */}
+              {image.uploaded ? (
+                <View style={staticStyles.uploadedBadge}>
+                  <MaterialCommunityIcons name="check-circle" size={16} color={theme.colors.primary} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+                    Subida
+                  </Text>
+                </View>
+              ) : (
+                <View style={staticStyles.uploadedBadge}>
+                  <MaterialCommunityIcons name="cloud-upload-outline" size={16} color={theme.colors.error} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                    Sin subir
+                  </Text>
+                </View>
+              )}
+
+              {/* Botón de subir (solo si no está subida) */}
+              {!image.uploaded && (
+                <ButtonApp
+                  mode="contained"
+                  icon="cloud-upload"
+                  onPress={() => handleUploadImage(index)}
+                  loading={uploadingImageIndex === index}
+                  disabled={uploadingImageIndex !== null}
+                  compact
+                  style={{ flex: 1 }}
+                >
+                  Subir
+                </ButtonApp>
+              )}
+
+              {/* Botón de eliminar */}
+              <IconButton
+                icon="delete"
+                iconColor={theme.colors.error}
+                size={20}
+                onPress={() => handleRemoveImage(index)}
+                disabled={uploadingImageIndex !== null}
+              />
+            </View>
+          </View>
+        ))}
+
+        {/* Botón para agregar más imágenes */}
+        {selectedImages.length < 2 && (
+          <ButtonApp
+            mode="outlined"
+            icon="image-plus"
+            onPress={handlePickImage}
+            disabled={uploadingImageIndex !== null || isSaving}
+            style={{ marginTop: 8 }}
+          >
+            Seleccionar imagen
+          </ButtonApp>
+        )}
+
+        {/* Mostrar errores relacionados con imágenes */}
+        {(errors as any).imageFileNames?.message && (
+          <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 4 }}>
+            {(errors as any).imageFileNames.message}
+          </Text>
+        )}
       </View>
 
       <View style={staticStyles.buttonContainer}>
@@ -308,6 +475,31 @@ const staticStyles = StyleSheet.create({
   },
   button: {
     width: '100%',
+  },
+  imagePreviewContainer: {
+    marginBottom: 12,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f5f5f5',
+  },
+  imageActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    gap: 8,
+    backgroundColor: '#fafafa',
+  },
+  uploadedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
   },
 });
 
