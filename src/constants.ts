@@ -30,6 +30,12 @@ export const EVENT_ENDPOINTS = {
   FINISHED_DETAIL: (uuid: string) => `/events/finished/${uuid}`,
 } as const;
 
+// ================== FILE ENDPOINTS ==================
+export const FILE_ENDPOINTS = {
+  UPLOAD: (fileType: 'image' | 'model') => `/files/upload/${fileType}`,
+  DELETE: (fileType: 'image' | 'model', fileName: string) => `/files/${fileType}/${fileName}`,
+} as const;
+
 // Claves de almacenamiento
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',

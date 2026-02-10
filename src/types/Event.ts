@@ -15,7 +15,9 @@ export interface EventCategory {
 
 export interface ImageItem {
   id: number;
-  imageUrl: string;
+  fileName: string;
+  bucket: string;
+  url: string; // Presigned URL from MinIO
   sortOrder: number;
   isPrimary: boolean;
   createdAt: Date;
@@ -59,7 +61,7 @@ export interface CreateEventDto {
   location?: string | null;
   startDate: string; // YYYY-MM-DD
   endDate?: string | null; // YYYY-MM-DD
-  imageUrls: string[]; // 1-2 URLs
+  imageFileNames: string[]; // 1-2 fileNames en MinIO
 }
 
 export interface UpdateEventDto {
@@ -69,5 +71,5 @@ export interface UpdateEventDto {
   location?: string | null;
   startDate?: string; // YYYY-MM-DD
   endDate?: string | null; // YYYY-MM-DD
-  imageUrls?: string[]; // Max 2 URLs
+  imageFileNames?: string[]; // Max 2 fileNames en MinIO
 }

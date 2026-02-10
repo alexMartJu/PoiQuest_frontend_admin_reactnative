@@ -22,8 +22,8 @@ export const createEventSchema = z
     location: z.string().max(255, 'La ubicación no puede tener más de 255 caracteres').optional().nullable(),
     startDate: dateStringSchema,
     endDate: dateStringSchema.optional().nullable(),
-    imageUrls: z
-      .array(z.string().url('Cada imagen debe ser una URL válida'))
+    imageFileNames: z
+      .array(z.string().min(1, 'El nombre de archivo no puede estar vacío'))
       .min(1, 'Debe proporcionar al menos 1 imagen')
       .max(2, 'No puede proporcionar más de 2 imágenes'),
   })
@@ -49,8 +49,8 @@ export const updateEventSchema = z
     location: z.string().max(255, 'La ubicación no puede tener más de 255 caracteres').optional().nullable(),
     startDate: dateStringSchema.optional(),
     endDate: dateStringSchema.optional().nullable(),
-    imageUrls: z
-      .array(z.string().url('Cada imagen debe ser una URL válida'))
+    imageFileNames: z
+      .array(z.string().min(1, 'El nombre de archivo no puede estar vacío'))
       .max(2, 'No puede proporcionar más de 2 imágenes')
       .optional(),
   })
