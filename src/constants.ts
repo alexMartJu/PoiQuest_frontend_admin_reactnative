@@ -30,6 +30,13 @@ export const EVENT_ENDPOINTS = {
   FINISHED_DETAIL: (uuid: string) => `/events/finished/${uuid}`,
 } as const;
 
+// Endpoints de analytics
+export const ANALYTICS_ENDPOINTS = {
+  OVERVIEW: '/analytics/overview',
+  EVENTS_BY_CATEGORY: '/analytics/events-by-category',
+  USERS_BY_MONTH: '/analytics/users-by-month',
+} as const;
+
 // ================== FILE ENDPOINTS ==================
 export const FILE_ENDPOINTS = {
   UPLOAD: (fileType: 'image' | 'model') => `/files/upload/${fileType}`,
