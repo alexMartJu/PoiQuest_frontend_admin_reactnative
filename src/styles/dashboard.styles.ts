@@ -6,17 +6,39 @@ import type { AppTheme } from '@/theme';
 export const dashboardStaticStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
   },
-  centerContent: {
-    alignItems: 'center',
-    gap: 12,
+  scrollContent: {
+    paddingVertical: 16,
   },
-  title: {},
+  header: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  title: {
+    textAlign: 'center',
+  },
   subtitle: {
     textAlign: 'center',
+  },
+  section: {
+    marginTop: 16,
+  },
+  sectionTitle: {
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  chartsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  chartItem: {
+    width: '48%',
+  },
+  chartItemMobile: {
+    paddingHorizontal: 16,
   },
 });
 
@@ -31,6 +53,10 @@ export const getDashboardStyles = (theme: AppTheme) => ({
   },
   subtitle: {
     color: theme.colors.onSurfaceVariant,
+  },
+  sectionTitle: {
+    color: theme.colors.onSurface,
+    fontWeight: '700' as any,
   },
 });
 
