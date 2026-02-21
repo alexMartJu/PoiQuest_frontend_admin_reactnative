@@ -4,6 +4,8 @@ import { Dialog, Portal, Text, Button } from 'react-native-paper';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { AppTheme } from '@/theme';
 
+export type DialogConfirmVariant = 'danger' | 'secondary' | 'primary';
+
 interface CommonDialogAppProps {
   visible: boolean;
   title: string;
@@ -14,6 +16,7 @@ interface CommonDialogAppProps {
   onConfirm: () => void;
   cancelDisabled?: boolean;
   confirmLoading?: boolean;
+  confirmVariant?: DialogConfirmVariant;
 }
 
 export function CommonDialogApp({
@@ -26,15 +29,37 @@ export function CommonDialogApp({
   onConfirm,
   cancelDisabled = false,
   confirmLoading = false,
+  confirmVariant = 'danger',
 }: CommonDialogAppProps) {
   const theme = useAppTheme();
   const themed = useMemo(() => getDialogStyles(theme), [theme]);
+
+  const confirmBg =
+    confirmVariant === 'secondary'
+      ? theme.colors.secondary
+      : confirmVariant === 'primary'
+        ? theme.colors.primary
+        : theme.colors.error;
+
+  const confirmFg =
+    confirmVariant === 'secondary'
+      ? theme.colors.onSecondary
+      : confirmVariant === 'primary'
+        ? theme.colors.onPrimary
+        : theme.colors.onError;
+
+  const titleColor =
+    confirmVariant === 'secondary'
+      ? theme.colors.secondary
+      : confirmVariant === 'primary'
+        ? theme.colors.primary
+        : theme.colors.error;
 
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onCancel} style={themed.dialog}>
         <View style={themed.title}>
-          <Text style={[staticStyles.titleTextBase, themed.titleText]}>{title}</Text>
+          <Text style={[staticStyles.titleTextBase, themed.titleText, { color: titleColor }]}>{title}</Text>
         </View>
         <View style={themed.content}>
           {typeof message === 'string' ? (
@@ -58,6 +83,8 @@ export function CommonDialogApp({
             onPress={onConfirm}
             loading={confirmLoading}
             disabled={confirmLoading}
+            buttonColor={confirmBg}
+            textColor={confirmFg}
             style={[staticStyles.buttonBase, themed.confirmButton]}
             labelStyle={themed.confirmButtonLabel}
           >
@@ -69,7 +96,6 @@ export function CommonDialogApp({
   );
 }
 
-// Estilos estáticos (no dependen del tema). Mantener aquí por la regla del profesor.
 const staticStyles = StyleSheet.create({
   titleTextBase: {
     lineHeight: 28,
@@ -99,7 +125,6 @@ const getDialogStyles = (theme: AppTheme) =>
     },
     titleText: {
       ...staticStyles.titleTextBase,
-      color: theme.colors.error,
       fontSize: theme.fonts.titleLarge.fontSize,
       fontWeight: theme.fonts.titleLarge.fontWeight as any,
     },
@@ -134,10 +159,8 @@ const getDialogStyles = (theme: AppTheme) =>
       ...staticStyles.buttonBase,
       marginLeft: theme.spacing.sm,
       borderRadius: theme.borderRadius.md,
-      backgroundColor: theme.colors.error,
     },
     confirmButtonLabel: {
-      color: theme.colors.onError,
       fontSize: theme.fonts.labelLarge.fontSize,
       fontWeight: theme.fonts.labelLarge.fontWeight as any,
       paddingVertical: theme.spacing.xs,
