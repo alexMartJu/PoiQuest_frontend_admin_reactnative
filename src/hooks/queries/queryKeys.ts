@@ -43,3 +43,12 @@ export const finishedEventsQueryKey = ['events', 'finished'] as const;
  */
 export const finishedEventDetailQueryKey = (uuid: string) =>
   ['events', 'finished', uuid] as const;
+
+// ================== USERS ==================
+
+/**
+ * Lista de usuarios filtrada por estado
+ * @param status - 'active' | 'disabled'
+ */
+export const usersQueryKey = (status: 'active' | 'disabled') =>
+  ['users', status] as const;

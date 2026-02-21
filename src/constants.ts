@@ -37,6 +37,16 @@ export const ANALYTICS_ENDPOINTS = {
   USERS_BY_MONTH: '/analytics/users-by-month',
 } as const;
 
+// Endpoints de usuarios (gestión admin)
+export const USER_ENDPOINTS = {
+  ALL: '/users',
+  ACTIVE: '/users/active',
+  DISABLED: '/users/disabled',
+  DISABLE: (profileUuid: string) => `/users/profile/${profileUuid}/disable`,
+  ENABLE: (profileUuid: string) => `/users/profile/${profileUuid}/enable`,
+  REGISTER_VALIDATOR: '/users/validator',
+} as const;
+
 // ================== FILE ENDPOINTS ==================
 export const FILE_ENDPOINTS = {
   UPLOAD: (fileType: 'image' | 'model') => `/files/upload/${fileType}`,
