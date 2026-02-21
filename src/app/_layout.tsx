@@ -7,6 +7,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
+import { SnackbarRoot } from '@/components/common';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -30,6 +31,7 @@ export default function RootLayout() {
                   <Stack.Screen name="login" options={{ animation: 'none' }} />
                   <Stack.Screen name="(protected)" />
                 </Stack>
+                <SnackbarRoot />
               </ThemeProvider>
             </QueryProvider>
           </AuthProvider>
