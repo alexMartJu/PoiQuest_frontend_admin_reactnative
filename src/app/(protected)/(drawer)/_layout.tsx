@@ -137,6 +137,16 @@ export default function DrawerLayout() {
           ),
         }}
       />
+      <Drawer.Screen
+        name="users"
+        options={{
+          drawerLabel: 'Usuarios',
+          title: 'Usuarios',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+          ),
+        }}
+      />
     </Drawer>
   );
 }
