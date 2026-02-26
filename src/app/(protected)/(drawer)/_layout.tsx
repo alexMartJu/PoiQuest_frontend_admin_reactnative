@@ -138,6 +138,16 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="pois"
+        options={{
+          drawerLabel: 'Puntos de interés',
+          title: 'Puntos de interés',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="map-marker-multiple" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="users"
         options={{
           drawerLabel: 'Usuarios',

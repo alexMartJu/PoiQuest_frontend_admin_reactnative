@@ -174,7 +174,7 @@ export default function EventDetailScreen() {
               <View key={poi.uuid} style={eventDetailStaticStyles.poiItem}>
                 <MaterialCommunityIcons name="map-marker" size={18} color={theme.colors.primary} />
                 <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}>
-                  {poi.name}
+                  {poi.title}
                 </Text>
               </View>
             ))}
