@@ -52,3 +52,18 @@ export const finishedEventDetailQueryKey = (uuid: string) =>
  */
 export const usersQueryKey = (status: 'active' | 'disabled') =>
   ['users', status] as const;
+
+// ================== POINTS OF INTEREST ==================
+
+/**
+ * POIs de un evento por UUID del evento
+ * @param eventUuid - UUID del evento
+ */
+export const poisByEventQueryKey = (eventUuid: string) =>
+  ['pois', 'event', eventUuid] as const;
+
+/**
+ * Detalle de un POI específico
+ * @param uuid - UUID del POI
+ */
+export const poiDetailQueryKey = (uuid: string) => ['pois', uuid] as const;
