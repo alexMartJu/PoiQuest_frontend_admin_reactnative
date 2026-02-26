@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Alert, View, ScrollView, KeyboardAvoidingView, Platform, Image, ImageSourcePropType } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Image, ImageSourcePropType } from 'react-native';
 import { router } from 'expo-router';
 import { Card, Text, TextInput } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
@@ -11,11 +11,13 @@ import { TextInputApp, ButtonApp } from '@/components/common';
 import { loginSchema, LoginFormValues } from '@/schemas/auth.schema';
 import { login as loginService } from '@/services/auth.service';
 import { useUserStore } from '@/stores/user.store';
+import { useSnackbarStore } from '@/stores/snackbar.store';
 
 export default function LoginScreen() {
   const theme = useAppTheme();
   const themed = useMemo(() => getLoginStyles(theme), [theme]);
   const { setUser, setTokens } = useUserStore();
+  const showSnackbar = useSnackbarStore((state) => state.show);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -34,7 +36,7 @@ export default function LoginScreen() {
 
       // Si el usuario no tiene rol 'admin', mostrar mensaje y no continuar
       if (!response.roles || !response.roles.includes('admin')) {
-        Alert.alert('Acceso denegado', 'Tu cuenta no tiene permisos de administrador.');
+        showSnackbar({ message: 'Tu cuenta no tiene permisos de administrador', variant: 'error' });
         return;
       }
 
@@ -62,7 +64,7 @@ export default function LoginScreen() {
     } catch (error: any) {
       const message =
         error?.response?.data?.message || error?.message || 'No se pudo iniciar sesión';
-      Alert.alert('Error', message);
+      showSnackbar({ message, variant: 'error' });
     }
   };
 

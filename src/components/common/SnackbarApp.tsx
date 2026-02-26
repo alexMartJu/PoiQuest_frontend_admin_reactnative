@@ -53,6 +53,7 @@ export function SnackbarApp({
       onDismiss={onDismiss}
       duration={duration}
       style={[staticStyles.snackbar, variantStyle.snackbar]}
+      wrapperStyle={staticStyles.snackbarWrapper}
       contentStyle={staticStyles.snackbarContent}
       action={
         actionLabel && onAction
@@ -79,6 +80,10 @@ export function SnackbarApp({
 }
 
 const staticStyles = StyleSheet.create({
+  snackbarWrapper: {
+    zIndex: 9999,
+    elevation: 9999,
+  },
   snackbar: {
     borderRadius: 14,
     marginHorizontal: 16,
