@@ -25,10 +25,15 @@ export interface ImageItem {
 
 export interface PointOfInterest {
   uuid: string;
-  name: string;
+  title: string;
+  author: string | null;
   description: string | null;
-  latitude: number;
-  longitude: number;
+  multimedia: Record<string, any> | null;
+  qrCode: string;
+  nfcTag: string | null;
+  coordX: number | null;
+  coordY: number | null;
+  images?: ImageItem[] | null;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -47,6 +47,16 @@ export const USER_ENDPOINTS = {
   REGISTER_VALIDATOR: '/users/validator',
 } as const;
 
+// Endpoints de puntos de interés
+export const POI_ENDPOINTS = {
+  LIST: '/points-of-interest',
+  BY_EVENT: (eventUuid: string) => `/points-of-interest/event/${eventUuid}`,
+  DETAIL: (uuid: string) => `/points-of-interest/${uuid}`,
+  CREATE: '/points-of-interest',
+  UPDATE: (uuid: string) => `/points-of-interest/${uuid}`,
+  DELETE: (uuid: string) => `/points-of-interest/${uuid}`,
+} as const;
+
 // ================== FILE ENDPOINTS ==================
 export const FILE_ENDPOINTS = {
   UPLOAD: (fileType: 'image' | 'model') => `/files/upload/${fileType}`,
