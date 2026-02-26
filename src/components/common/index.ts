@@ -5,6 +5,7 @@ export type { ChipFilterOption } from './ChipFilterApp';
 export { CommonDialogApp } from './CommonDialogApp';
 export type { DialogConfirmVariant } from './CommonDialogApp';
 export { CountBadgeApp } from './CountBadgeApp';
+export { DatePickerApp } from './DatePickerApp';
 export { IconButtonApp } from './IconButtonApp';
 export { SnackbarApp } from './SnackbarApp';
 export { SnackbarRoot } from './SnackbarRoot';

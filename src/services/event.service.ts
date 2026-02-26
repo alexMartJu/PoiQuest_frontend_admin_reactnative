@@ -1,5 +1,5 @@
 import apiClient from './api.client';
-import { EVENT_ENDPOINTS, PAGINATION } from '@/constants';
+import { EVENT_ENDPOINTS, CATEGORY_ENDPOINTS, PAGINATION } from '@/constants';
 import type {
   Event,
   PaginatedEventsResponse,
@@ -91,5 +91,15 @@ export const getFinishedEvents = async (): Promise<Event[]> => {
  */
 export const getFinishedEventDetail = async (uuid: string): Promise<Event> => {
   const response = await apiClient.get<Event>(EVENT_ENDPOINTS.FINISHED_DETAIL(uuid));
+  return response.data;
+};
+
+// ================== CATEGORY SERVICE ==================
+
+/**
+ * Obtiene todas las categorías de eventos
+ */
+export const getEventCategories = async (): Promise<EventCategory[]> => {
+  const response = await apiClient.get<EventCategory[]>(CATEGORY_ENDPOINTS.LIST);
   return response.data;
 };

@@ -14,6 +14,13 @@
 export const eventsQueryKey = (cursor?: string | null) =>
   cursor ? (['events', { cursor }] as const) : (['events'] as const);
 
+// ================== EVENT CATEGORIES ==================
+
+/**
+ * Lista de todas las categorías de eventos
+ */
+export const eventCategoriesQueryKey = ['event-categories'] as const;
+
 /**
  * Detalle de un evento específico
  * @param uuid - UUID del evento

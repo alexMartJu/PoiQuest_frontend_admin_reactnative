@@ -30,6 +30,11 @@ export const EVENT_ENDPOINTS = {
   FINISHED_DETAIL: (uuid: string) => `/events/finished/${uuid}`,
 } as const;
 
+// Endpoints de categorías de eventos
+export const CATEGORY_ENDPOINTS = {
+  LIST: '/event-categories',
+} as const;
+
 // Endpoints de analytics
 export const ANALYTICS_ENDPOINTS = {
   OVERVIEW: '/analytics/overview',

@@ -8,6 +8,10 @@ import { QueryProvider } from '@/providers/QueryProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { SnackbarRoot } from '@/components/common';
+import { es, registerTranslation } from 'react-native-paper-dates';
+
+// Registrar traducción al español para react-native-paper-dates
+registerTranslation('es', es);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
