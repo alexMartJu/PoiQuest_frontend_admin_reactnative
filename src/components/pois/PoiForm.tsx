@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Image, Pressable, Dimensions } from 'react-native';
-import { Text, IconButton, Portal, Modal } from 'react-native-paper';
+import { Text, IconButton, Portal, Modal, TextInput } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import type { AppTheme } from '@/theme';
 import { createPoiSchema, updatePoiSchema, CreatePoiFormValues, UpdatePoiFormValues } from '@/schemas/poi.schema';
 import { PointOfInterest } from '@/types/PointOfInterest';
 import { useCreatePoiMutation, useUpdatePoiMutation } from '@/hooks/queries/pois';
+import { useEventDetailQuery } from '@/hooks/queries/events';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { router } from 'expo-router';
 import { pickImageFromLibrary } from '@/utils/pickImage';
@@ -43,6 +44,9 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
   const createMutation = useCreatePoiMutation();
   const updateMutation = useUpdatePoiMutation();
   const showSnackbar = useSnackbarStore((state) => state.show);
+
+  // Obtener el nombre del evento cuando se está creando
+  const { data: eventDetail, isLoading: isLoadingEvent } = useEventDetailQuery(eventUuid, isCreating && !!eventUuid);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
@@ -225,15 +229,14 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
           <Controller
             control={control}
             name="eventUuid"
-            render={({ field: { value, onChange, onBlur } }) => (
+            render={({ field: { value } }) => (
               <TextInputApp
-                label="UUID del evento *"
-                value={(value as string) || ''}
-                onChangeText={onChange}
-                onBlur={onBlur}
+                label="Evento *"
+                value={isLoadingEvent ? 'Cargando evento...' : (eventDetail?.name || (value as string) || '')}
+                editable={false}
+                disabled
                 errorText={(errors as any).eventUuid?.message}
-                autoCapitalize="none"
-                editable={!eventUuid}
+                left={<TextInput.Icon icon="calendar-star" color={theme.colors.secondary} forceTextInputFocus={false} />}
               />
             )}
           />

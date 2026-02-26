@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image, Pressable, ActivityIndicator } from 'react-native';
-import { Text, IconButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Image, Pressable, ActivityIndicator, FlatList } from 'react-native';
+import { Text, IconButton, Portal, Modal, TextInput } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { TextInputApp, ButtonApp } from '@/components/common';
+import { TextInputApp, ButtonApp, DatePickerApp } from '@/components/common';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import type { AppTheme } from '@/theme';
 import { createEventSchema, updateEventSchema, CreateEventFormValues, UpdateEventFormValues } from '@/schemas/event.schema';
 import { Event } from '@/types/Event';
-import { useCreateEventMutation, useUpdateEventMutation } from '@/hooks/queries/events';
+import { useCreateEventMutation, useUpdateEventMutation, useEventCategoriesQuery } from '@/hooks/queries/events';
+import { useSnackbarStore } from '@/stores/snackbar.store';
 import { router } from 'expo-router';
 import { pickImageFromLibrary } from '@/utils/pickImage';
 import { uploadImage } from '@/services/file.service';
@@ -35,10 +36,14 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
   // Estado para las imágenes seleccionadas
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
-  // Usar React Query mutations
+  // Obtener categorías de eventos
+  const { data: categories = [], isLoading: isLoadingCategories } = useEventCategoriesQuery();
+
   const createMutation = useCreateEventMutation();
   const updateMutation = useUpdateEventMutation();
+  const showSnackbar = useSnackbarStore((state) => state.show);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
@@ -106,7 +111,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
     try {
       // Verificar límite de imágenes
       if (selectedImages.length >= 2) {
-        Alert.alert('Límite alcanzado', 'Solo puedes seleccionar un máximo de 2 imágenes');
+        showSnackbar({ message: 'Solo puedes seleccionar un máximo de 2 imágenes', variant: 'warning' });
         return;
       }
 
@@ -119,7 +124,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         uploaded: false,
       }]);
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'No se pudo seleccionar la imagen');
+      showSnackbar({ message: error?.message || 'No se pudo seleccionar la imagen', variant: 'error' });
     }
   };
 
@@ -160,9 +165,9 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         return next;
       });
 
-      Alert.alert('Éxito', 'Imagen subida correctamente');
+      showSnackbar({ message: 'Imagen subida correctamente', variant: 'success' });
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'No se pudo subir la imagen');
+      showSnackbar({ message: error?.message || 'No se pudo subir la imagen', variant: 'error' });
     } finally {
       setUploadingImageIndex(null);
     }
@@ -172,14 +177,14 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
     try {
       // Validar que al menos haya una imagen
       if (selectedImages.length === 0) {
-        Alert.alert('Error', 'Debes seleccionar al menos 1 imagen');
+        showSnackbar({ message: 'Debes seleccionar al menos 1 imagen', variant: 'error' });
         return;
       }
 
       // Validar que todas las imágenes estén subidas
       const hasUnuploadedImages = selectedImages.some(img => !img.uploaded);
       if (hasUnuploadedImages) {
-        Alert.alert('Error', 'Debes subir todas las imágenes antes de guardar');
+        showSnackbar({ message: 'Debes subir todas las imágenes antes de guardar', variant: 'error' });
         return;
       }
 
@@ -197,7 +202,7 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
       if (isCreating) {
         // Crear nuevo evento usando React Query mutation
         const created = await createMutation.mutateAsync(payload as CreateEventFormValues);
-        Alert.alert('Éxito', 'Evento creado correctamente');
+        showSnackbar({ message: 'Evento creado correctamente', variant: 'success' });
         router.replace(`/(protected)/(drawer)/events/${created.uuid}`);
       } else {
         // Actualizar evento existente usando React Query mutation
@@ -208,14 +213,14 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           uuid: event.uuid,
           data: payload as UpdateEventFormValues,
         });
-        Alert.alert('Éxito', 'Evento actualizado correctamente');
+        showSnackbar({ message: 'Evento actualizado correctamente', variant: 'success' });
         if (onSuccess) {
           onSuccess();
         }
       }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'No se pudo guardar el evento';
-      Alert.alert('Error', message);
+      showSnackbar({ message, variant: 'error' });
     }
   };
 
@@ -264,16 +269,70 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         <Controller
           control={control}
           name="categoryUuid"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <TextInputApp
-              label="UUID de la categoría *"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              errorText={errors.categoryUuid?.message}
-              autoCapitalize="none"
-            />
-          )}
+          render={({ field: { value, onChange } }) => {
+            const selectedCategory = categories.find(c => c.uuid === value);
+            return (
+              <>
+                <TextInputApp
+                  label="Categoría *"
+                  value={selectedCategory?.name || ''}
+                  editable={false}
+                  errorText={errors.categoryUuid?.message}
+                  right={
+                    <TextInput.Icon
+                      icon="menu-down"
+                      onPress={() => setCategoryModalVisible(true)}
+                      color={theme.colors.secondary}
+                      forceTextInputFocus={false}
+                    />
+                  }
+                />
+                <Portal>
+                  <Modal
+                    visible={categoryModalVisible}
+                    onDismiss={() => setCategoryModalVisible(false)}
+                    contentContainerStyle={[staticStyles.categoryModal, { backgroundColor: theme.colors.surface }]}
+                  >
+                    <Text variant="titleMedium" style={[staticStyles.categoryModalTitle, themed.sectionTitle]}>
+                      Seleccionar categoría
+                    </Text>
+                    {isLoadingCategories ? (
+                      <ActivityIndicator style={{ padding: 24 }} color={theme.colors.primary} />
+                    ) : categories.length === 0 ? (
+                      <Text variant="bodyMedium" style={{ padding: 24, textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
+                        No hay categorías disponibles
+                      </Text>
+                    ) : (
+                      <FlatList
+                        data={categories}
+                        keyExtractor={(item) => item.uuid}
+                        renderItem={({ item }) => (
+                          <Pressable
+                            onPress={() => {
+                              onChange(item.uuid);
+                              setCategoryModalVisible(false);
+                            }}
+                            style={({ pressed }) => [
+                              staticStyles.categoryItem,
+                              pressed && { backgroundColor: theme.colors.surfaceVariant },
+                              value === item.uuid && { backgroundColor: theme.colors.secondaryContainer },
+                            ]}
+                          >
+                            <Text
+                              variant="bodyLarge"
+                              style={value === item.uuid ? { color: theme.colors.secondary, fontWeight: 'bold' } : { color: theme.colors.onSurface }}
+                            >
+                              {item.name}
+                            </Text>
+                          </Pressable>
+                        )}
+                      />
+                    )}
+                  </Modal>
+                </Portal>
+              </>
+            );
+          }}
         />
 
         <Controller
@@ -300,15 +359,12 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         <Controller
           control={control}
           name="startDate"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <TextInputApp
-              label="Fecha de inicio (YYYY-MM-DD) *"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
+          render={({ field: { value, onChange } }) => (
+            <DatePickerApp
+              label="Fecha de inicio *"
+              value={value || ''}
+              onChange={onChange}
               errorText={errors.startDate?.message}
-              placeholder="2025-12-01"
-              autoCapitalize="none"
             />
           )}
         />
@@ -316,15 +372,12 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         <Controller
           control={control}
           name="endDate"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <TextInputApp
-              label="Fecha de fin (YYYY-MM-DD)"
+          render={({ field: { value, onChange } }) => (
+            <DatePickerApp
+              label="Fecha de fin"
               value={value || ''}
-              onChangeText={onChange}
-              onBlur={onBlur}
+              onChange={onChange}
               errorText={errors.endDate?.message}
-              placeholder="2025-12-31"
-              autoCapitalize="none"
             />
           )}
         />
@@ -500,6 +553,21 @@ const staticStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     flex: 1,
+  },
+  categoryModal: {
+    margin: 24,
+    borderRadius: 12,
+    maxHeight: '50%',
+    overflow: 'hidden',
+  },
+  categoryModalTitle: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  categoryItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
 });
 
