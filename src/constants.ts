@@ -2,12 +2,27 @@
 
 import { Platform } from 'react-native';
 
-// Ajusta esta URL según tu backend
-export const API_BASE_URL = __DEV__
-  ? Platform.OS === 'android'
-    ? 'http://10.0.2.2:8000' // Android emulator -> host machine
-    : 'http://localhost:8000' // Desarrollo en iOS simulator / web
-  : 'https://your-production-api.com'; // Producción
+/**
+ * Resolución de la URL base de la API:
+ *
+ * 1. Si EXPO_PUBLIC_API_URL está definida en .env → se usa tal cual.
+ *    Úsala cuando corras la app en un dispositivo físico real:
+ *      EXPO_PUBLIC_API_URL=http://your_local_ip_here:8000
+ *
+ * 2. Si no está definida → se infiere automáticamente:
+ *    - Android emulator : 10.0.2.2  (alias al localhost del PC)
+ *    - iOS simulator    : localhost
+ *    - Producción       : tu dominio
+ */
+const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+export const API_BASE_URL: string = ENV_API_URL
+  ? ENV_API_URL
+  : __DEV__
+    ? Platform.OS === 'android'
+      ? 'http://10.0.2.2:8000' // Android emulator -> host machine
+      : 'http://localhost:8000' // Desarrollo en iOS simulator / web
+    : 'https://your-production-api.com'; // Producción
 
 // Endpoints de autenticación
 export const AUTH_ENDPOINTS = {
