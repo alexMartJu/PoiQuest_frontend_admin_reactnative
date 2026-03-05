@@ -77,6 +77,28 @@ export const POI_ENDPOINTS = {
   DELETE: (uuid: string) => `/points-of-interest/${uuid}`,
 } as const;
 
+// Endpoints de partners (ciudades, organizadores, patrocinadores)
+export const PARTNER_ENDPOINTS = {
+  // Ciudades
+  CITIES_LIST: '/cities',
+  CITY_DETAIL: (uuid: string) => `/cities/${uuid}`,
+  CITY_CREATE: '/cities',
+  CITY_UPDATE: (uuid: string) => `/cities/${uuid}`,
+  CITY_DISABLE: (uuid: string) => `/cities/${uuid}`,
+  // Organizadores
+  ORGANIZERS_LIST: '/organizers',
+  ORGANIZER_DETAIL: (uuid: string) => `/organizers/${uuid}`,
+  ORGANIZER_CREATE: '/organizers',
+  ORGANIZER_UPDATE: (uuid: string) => `/organizers/${uuid}`,
+  ORGANIZER_DISABLE: (uuid: string) => `/organizers/${uuid}`,
+  // Patrocinadores
+  SPONSORS_LIST: '/sponsors',
+  SPONSOR_DETAIL: (uuid: string) => `/sponsors/${uuid}`,
+  SPONSOR_CREATE: '/sponsors',
+  SPONSOR_UPDATE: (uuid: string) => `/sponsors/${uuid}`,
+  SPONSOR_DISABLE: (uuid: string) => `/sponsors/${uuid}`,
+} as const;
+
 // ================== FILE ENDPOINTS ==================
 export const FILE_ENDPOINTS = {
   UPLOAD: (fileType: 'image' | 'model') => `/files/upload/${fileType}`,

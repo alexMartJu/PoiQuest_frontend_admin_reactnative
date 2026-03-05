@@ -13,6 +13,28 @@ export interface EventCategory {
   updatedAt: Date;
 }
 
+export interface EventCity {
+  uuid: string;
+  name: string;
+  country: string;
+  region: string | null;
+}
+
+export interface EventOrganizer {
+  uuid: string;
+  name: string;
+  type: string;
+  contactEmail: string;
+  images?: ImageItem[];
+}
+
+export interface EventSponsor {
+  uuid: string;
+  name: string;
+  websiteUrl: string | null;
+  images?: ImageItem[];
+}
+
 export interface ImageItem {
   id: number;
   fileName: string;
@@ -44,7 +66,12 @@ export interface Event {
   description: string | null;
   category: EventCategory | null;
   status: EventStatus;
-  location: string | null;
+  city: EventCity | null;
+  organizer: EventOrganizer | null;
+  sponsor: EventSponsor | null;
+  isPremium: boolean;
+  price: number | null;
+  capacityPerDay: number | null;
   startDate: string; // YYYY-MM-DD
   endDate: string | null; // YYYY-MM-DD
   images: ImageItem[];
@@ -63,7 +90,12 @@ export interface CreateEventDto {
   name: string;
   description?: string | null;
   categoryUuid: string;
-  location?: string | null;
+  cityUuid: string;
+  organizerUuid: string;
+  sponsorUuid?: string | null;
+  isPremium: boolean;
+  price?: number | null;
+  capacityPerDay?: number | null;
   startDate: string; // YYYY-MM-DD
   endDate?: string | null; // YYYY-MM-DD
   imageFileNames: string[]; // 1-2 fileNames en MinIO
@@ -73,7 +105,12 @@ export interface UpdateEventDto {
   name?: string;
   description?: string | null;
   categoryUuid?: string;
-  location?: string | null;
+  cityUuid?: string;
+  organizerUuid?: string;
+  sponsorUuid?: string | null;
+  isPremium?: boolean;
+  price?: number | null;
+  capacityPerDay?: number | null;
   startDate?: string; // YYYY-MM-DD
   endDate?: string | null; // YYYY-MM-DD
   imageFileNames?: string[]; // Max 2 fileNames en MinIO

@@ -74,3 +74,31 @@ export const poisByEventQueryKey = (eventUuid: string) =>
  * @param uuid - UUID del POI
  */
 export const poiDetailQueryKey = (uuid: string) => ['pois', uuid] as const;
+
+// ================== PARTNERS - CITIES ==================
+
+export const citiesQueryKey = (status?: string) =>
+  status ? (['cities', { status }] as const) : (['cities'] as const);
+
+export const cityDetailQueryKey = (uuid: string) => ['cities', uuid] as const;
+
+export const allActiveCitiesQueryKey = ['cities', 'all-active'] as const;
+
+// ================== PARTNERS - ORGANIZERS ==================
+
+export const organizersQueryKey = (status?: string) =>
+  status ? (['organizers', { status }] as const) : (['organizers'] as const);
+
+export const organizerDetailQueryKey = (uuid: string) => ['organizers', uuid] as const;
+
+export const allActiveOrganizersQueryKey = ['organizers', 'all-active'] as const;
+
+// ================== PARTNERS - SPONSORS ==================
+
+export const sponsorsQueryKey = (status?: string) =>
+  status ? (['sponsors', { status }] as const) : (['sponsors'] as const);
+
+export const sponsorDetailQueryKey = (uuid: string) => ['sponsors', uuid] as const;
+
+export const allActiveSponsorsQueryKey = ['sponsors', 'all-active'] as const;
+

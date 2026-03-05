@@ -19,7 +19,16 @@ export const createEventSchema = z
     categoryUuid: z
       .string({ required_error: 'La categoría es obligatoria' })
       .uuid('UUID de categoría inválido'),
-    location: z.string().max(255, 'La ubicación no puede tener más de 255 caracteres').optional().nullable(),
+    cityUuid: z
+      .string({ required_error: 'La ciudad es obligatoria' })
+      .uuid('UUID de ciudad inválido'),
+    organizerUuid: z
+      .string({ required_error: 'El organizador es obligatorio' })
+      .uuid('UUID de organizador inválido'),
+    sponsorUuid: z.string().uuid('UUID de patrocinador inválido').optional().nullable(),
+    isPremium: z.boolean({ required_error: 'Indica si el evento es premium' }),
+    price: z.number().min(0, 'El precio no puede ser negativo').optional().nullable(),
+    capacityPerDay: z.number().int().positive('La capacidad debe ser un entero positivo').optional().nullable(),
     startDate: dateStringSchema,
     endDate: dateStringSchema.optional().nullable(),
     imageFileNames: z
@@ -36,6 +45,16 @@ export const createEventSchema = z
       message: 'La fecha de fin debe ser posterior a la fecha de inicio',
       path: ['endDate'],
     },
+  )
+  .refine(
+    (data) => {
+      if (!data.isPremium) return true;
+      return data.price != null && data.price >= 0;
+    },
+    {
+      message: 'Los eventos premium deben tener un precio',
+      path: ['price'],
+    },
   );
 
 export type CreateEventFormValues = z.infer<typeof createEventSchema>;
@@ -46,7 +65,12 @@ export const updateEventSchema = z
     name: z.string().min(1, 'El nombre no puede estar vacío').max(150, 'El nombre no puede tener más de 150 caracteres').trim().optional(),
     description: z.string().optional().nullable(),
     categoryUuid: z.string().uuid('UUID de categoría inválido').optional(),
-    location: z.string().max(255, 'La ubicación no puede tener más de 255 caracteres').optional().nullable(),
+    cityUuid: z.string().uuid('UUID de ciudad inválido').optional(),
+    organizerUuid: z.string().uuid('UUID de organizador inválido').optional(),
+    sponsorUuid: z.string().uuid('UUID de patrocinador inválido').optional().nullable(),
+    isPremium: z.boolean().optional(),
+    price: z.number().min(0, 'El precio no puede ser negativo').optional().nullable(),
+    capacityPerDay: z.number().int().positive('La capacidad debe ser un entero positivo').optional().nullable(),
     startDate: dateStringSchema.optional(),
     endDate: dateStringSchema.optional().nullable(),
     imageFileNames: z
@@ -66,3 +90,4 @@ export const updateEventSchema = z
   );
 
 export type UpdateEventFormValues = z.infer<typeof updateEventSchema>;
+
