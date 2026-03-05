@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Image, Pressable, ActivityIndicator, FlatList } from 'react-native';
-import { Text, IconButton, Portal, Modal, TextInput } from 'react-native-paper';
-import { Controller, useForm } from 'react-hook-form';
+import { Text, IconButton, Portal, Modal, TextInput, Switch } from 'react-native-paper';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TextInputApp, ButtonApp, DatePickerApp } from '@/components/common';
@@ -10,6 +10,7 @@ import type { AppTheme } from '@/theme';
 import { createEventSchema, updateEventSchema, CreateEventFormValues, UpdateEventFormValues } from '@/schemas/event.schema';
 import { Event } from '@/types/Event';
 import { useCreateEventMutation, useUpdateEventMutation, useEventCategoriesQuery } from '@/hooks/queries/events';
+import { useAllActiveCitiesQuery, useAllActiveOrganizersQuery, useAllActiveSponsorsQuery } from '@/hooks/queries/partners';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { router } from 'expo-router';
 import { pickImageFromLibrary } from '@/utils/pickImage';
@@ -37,9 +38,16 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [organizerModalVisible, setOrganizerModalVisible] = useState(false);
+  const [sponsorModalVisible, setSponsorModalVisible] = useState(false);
 
   // Obtener categorías de eventos
   const { data: categories = [], isLoading: isLoadingCategories } = useEventCategoriesQuery();
+  // Obtener partners activos para pickers
+  const { data: cities = [] } = useAllActiveCitiesQuery();
+  const { data: organizers = [] } = useAllActiveOrganizersQuery();
+  const { data: sponsors = [] } = useAllActiveSponsorsQuery();
 
   const createMutation = useCreateEventMutation();
   const updateMutation = useUpdateEventMutation();
@@ -64,7 +72,12 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           name: '',
           description: '',
           categoryUuid: '',
-          location: '',
+          cityUuid: '',
+          organizerUuid: '',
+          sponsorUuid: '',
+          isPremium: false,
+          price: null,
+          capacityPerDay: null,
           startDate: '',
           endDate: '',
           imageFileNames: [],
@@ -73,12 +86,20 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           name: event?.name || '',
           description: event?.description || '',
           categoryUuid: event?.category?.uuid || '',
-          location: event?.location || '',
+          cityUuid: event?.city?.uuid || '',
+          organizerUuid: event?.organizer?.uuid || '',
+          sponsorUuid: event?.sponsor?.uuid || '',
+          isPremium: event?.isPremium ?? false,
+          price: event?.price ?? null,
+          capacityPerDay: event?.capacityPerDay ?? null,
           startDate: event?.startDate || '',
           endDate: event?.endDate || '',
           imageFileNames: event?.images?.map(img => img.fileName) || [],
         },
   });
+
+  // Escuchar el valor de isPremium para mostrar/ocultar el campo price
+  const isPremiumValue = useWatch({ control, name: 'isPremium' as any }) as boolean;
 
   // Actualizar el formulario cuando cambie el evento
   useEffect(() => {
@@ -87,7 +108,12 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
         name: event.name,
         description: event.description || '',
         categoryUuid: event.category?.uuid || '',
-        location: event.location || '',
+        cityUuid: event.city?.uuid || '',
+        organizerUuid: event.organizer?.uuid || '',
+        sponsorUuid: event.sponsor?.uuid || '',
+        isPremium: event.isPremium ?? false,
+        price: event.price ?? null,
+        capacityPerDay: event.capacityPerDay ?? null,
         startDate: event.startDate,
         endDate: event.endDate || '',
         imageFileNames: event.images?.map(img => img.fileName) || [],
@@ -335,17 +361,199 @@ export function EventForm({ event, isCreating = false, onSuccess, onCancel }: Ev
           }}
         />
 
+        {/* Picker de ciudad */}
         <Controller
           control={control}
-          name="location"
+          name="cityUuid"
+          render={({ field: { value, onChange } }) => {
+            const selected = cities.find(c => c.uuid === value);
+            return (
+              <>
+                <TextInputApp
+                  label="Ciudad *"
+                  value={selected ? `${selected.name}, ${selected.country}` : ''}
+                  editable={false}
+                  errorText={(errors as any).cityUuid?.message}
+                  right={
+                    <TextInput.Icon
+                      icon="menu-down"
+                      onPress={() => setCityModalVisible(true)}
+                      color={theme.colors.secondary}
+                      forceTextInputFocus={false}
+                    />
+                  }
+                />
+                <Portal>
+                  <Modal
+                    visible={cityModalVisible}
+                    onDismiss={() => setCityModalVisible(false)}
+                    contentContainerStyle={[staticStyles.categoryModal, { backgroundColor: theme.colors.surface }]}
+                  >
+                    <Text variant="titleMedium" style={[staticStyles.categoryModalTitle, themed.sectionTitle]}>Seleccionar ciudad</Text>
+                    <FlatList
+                      data={cities}
+                      keyExtractor={(item) => item.uuid}
+                      renderItem={({ item }) => (
+                        <Pressable
+                          onPress={() => { onChange(item.uuid); setCityModalVisible(false); }}
+                          style={[staticStyles.categoryItem, value === item.uuid && { backgroundColor: theme.colors.secondaryContainer }]}
+                        >
+                          <Text variant="bodyLarge" style={value === item.uuid ? { color: theme.colors.secondary, fontWeight: 'bold' } : { color: theme.colors.onSurface }}>
+                            {item.name}, {item.country}
+                          </Text>
+                        </Pressable>
+                      )}
+                    />
+                  </Modal>
+                </Portal>
+              </>
+            );
+          }}
+        />
+
+        {/* Picker de organizador */}
+        <Controller
+          control={control}
+          name="organizerUuid"
+          render={({ field: { value, onChange } }) => {
+            const selected = organizers.find(o => o.uuid === value);
+            return (
+              <>
+                <TextInputApp
+                  label="Organizador *"
+                  value={selected?.name || ''}
+                  editable={false}
+                  errorText={(errors as any).organizerUuid?.message}
+                  right={
+                    <TextInput.Icon
+                      icon="menu-down"
+                      onPress={() => setOrganizerModalVisible(true)}
+                      color={theme.colors.secondary}
+                      forceTextInputFocus={false}
+                    />
+                  }
+                />
+                <Portal>
+                  <Modal
+                    visible={organizerModalVisible}
+                    onDismiss={() => setOrganizerModalVisible(false)}
+                    contentContainerStyle={[staticStyles.categoryModal, { backgroundColor: theme.colors.surface }]}
+                  >
+                    <Text variant="titleMedium" style={[staticStyles.categoryModalTitle, themed.sectionTitle]}>Seleccionar organizador</Text>
+                    <FlatList
+                      data={organizers}
+                      keyExtractor={(item) => item.uuid}
+                      renderItem={({ item }) => (
+                        <Pressable
+                          onPress={() => { onChange(item.uuid); setOrganizerModalVisible(false); }}
+                          style={[staticStyles.categoryItem, value === item.uuid && { backgroundColor: theme.colors.secondaryContainer }]}
+                        >
+                          <Text variant="bodyLarge" style={value === item.uuid ? { color: theme.colors.secondary, fontWeight: 'bold' } : { color: theme.colors.onSurface }}>
+                            {item.name}
+                          </Text>
+                        </Pressable>
+                      )}
+                    />
+                  </Modal>
+                </Portal>
+              </>
+            );
+          }}
+        />
+
+        {/* Picker de patrocinador (opcional) */}
+        <Controller
+          control={control}
+          name="sponsorUuid"
+          render={({ field: { value, onChange } }) => {
+            const selected = sponsors.find(s => s.uuid === value);
+            return (
+              <>
+                <TextInputApp
+                  label="Patrocinador (opcional)"
+                  value={selected?.name || ''}
+                  editable={false}
+                  errorText={(errors as any).sponsorUuid?.message}
+                  right={
+                    <TextInput.Icon
+                      icon={value ? 'close' : 'menu-down'}
+                      onPress={() => value ? onChange('') : setSponsorModalVisible(true)}
+                      color={theme.colors.secondary}
+                      forceTextInputFocus={false}
+                    />
+                  }
+                />
+                <Portal>
+                  <Modal
+                    visible={sponsorModalVisible}
+                    onDismiss={() => setSponsorModalVisible(false)}
+                    contentContainerStyle={[staticStyles.categoryModal, { backgroundColor: theme.colors.surface }]}
+                  >
+                    <Text variant="titleMedium" style={[staticStyles.categoryModalTitle, themed.sectionTitle]}>Seleccionar patrocinador</Text>
+                    <FlatList
+                      data={sponsors}
+                      keyExtractor={(item) => item.uuid}
+                      renderItem={({ item }) => (
+                        <Pressable
+                          onPress={() => { onChange(item.uuid); setSponsorModalVisible(false); }}
+                          style={[staticStyles.categoryItem, value === item.uuid && { backgroundColor: theme.colors.secondaryContainer }]}
+                        >
+                          <Text variant="bodyLarge" style={value === item.uuid ? { color: theme.colors.secondary, fontWeight: 'bold' } : { color: theme.colors.onSurface }}>
+                            {item.name}
+                          </Text>
+                        </Pressable>
+                      )}
+                    />
+                  </Modal>
+                </Portal>
+              </>
+            );
+          }}
+        />
+
+        {/* isPremium switch */}
+        <Controller
+          control={control}
+          name="isPremium"
+          render={({ field: { value, onChange } }) => (
+            <View style={staticStyles.switchRow}>
+              <MaterialCommunityIcons name="star-circle" size={20} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={{ flex: 1, color: theme.colors.onSurface, marginLeft: 8 }}>Evento premium</Text>
+              <Switch value={!!value} onValueChange={onChange} />
+            </View>
+          )}
+        />
+
+        {/* price (solo si isPremium) */}
+        {isPremiumValue && (
+          <Controller
+            control={control}
+            name="price"
+            render={({ field: { value, onChange, onBlur } }) => (
+              <TextInputApp
+                label="Precio (€) *"
+                value={value != null ? String(value) : ''}
+                onChangeText={(t) => onChange(t === '' ? null : parseFloat(t))}
+                onBlur={onBlur}
+                errorText={(errors as any).price?.message}
+                keyboardType="decimal-pad"
+              />
+            )}
+          />
+        )}
+
+        {/* capacityPerDay */}
+        <Controller
+          control={control}
+          name="capacityPerDay"
           render={({ field: { value, onChange, onBlur } }) => (
             <TextInputApp
-              label="Ubicación"
-              value={value || ''}
-              onChangeText={onChange}
+              label="Capacidad diaria (opcional)"
+              value={value != null ? String(value) : ''}
+              onChangeText={(t) => onChange(t === '' ? null : parseInt(t, 10))}
               onBlur={onBlur}
-              errorText={errors.location?.message}
-              maxLength={255}
+              errorText={(errors as any).capacityPerDay?.message}
+              keyboardType="number-pad"
             />
           )}
         />
@@ -568,6 +776,13 @@ const staticStyles = StyleSheet.create({
   categoryItem: {
     paddingVertical: 14,
     paddingHorizontal: 20,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginTop: 4,
   },
 });
 

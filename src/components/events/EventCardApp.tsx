@@ -86,10 +86,10 @@ export function EventCardApp({ event, onPress }: EventCardAppProps) {
                 </View>
               )}
 
-              {event.location && (
+              {event.city && (
                 <View style={staticStyles.infoRow}>
                   <MaterialCommunityIcons
-                    name="map-marker"
+                    name="city"
                     size={isTablet ? 18 : 16}
                     color={themed.iconVariant.color}
                   />
@@ -99,7 +99,7 @@ export function EventCardApp({ event, onPress }: EventCardAppProps) {
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {event.location}
+                    {event.city.name}, {event.city.country}
                   </Text>
                 </View>
               )}

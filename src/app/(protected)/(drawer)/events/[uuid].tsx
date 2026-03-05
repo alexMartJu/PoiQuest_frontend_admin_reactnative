@@ -108,11 +108,58 @@ export default function EventDetailScreen() {
             </View>
           )}
 
-          {event.location && (
+          {event.city && (
             <View style={eventDetailStaticStyles.infoRow}>
-              <MaterialCommunityIcons name="map-marker" size={20} color={theme.colors.onSurfaceVariant} />
+              <MaterialCommunityIcons name="city" size={20} color={theme.colors.onSurfaceVariant} />
               <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
-                {event.location}
+                {event.city.name}, {event.city.country}
+              </Text>
+            </View>
+          )}
+
+          {event.organizer && (
+            <View style={eventDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="handshake" size={20} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
+                Organizador: {event.organizer.name}
+              </Text>
+            </View>
+          )}
+
+          {event.sponsor && (
+            <View style={eventDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="star-circle" size={20} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
+                Patrocinador: {event.sponsor.name}
+              </Text>
+            </View>
+          )}
+
+          <View style={eventDetailStaticStyles.infoRow}>
+            <MaterialCommunityIcons
+              name={event.isPremium ? 'star-circle' : 'ticket-outline'}
+              size={20}
+              color={event.isPremium ? theme.colors.secondary : theme.colors.onSurfaceVariant}
+            />
+            <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
+              {event.isPremium ? 'Evento premium' : 'Gratuito'}
+            </Text>
+          </View>
+
+          {event.isPremium && event.price != null && (
+            <View style={eventDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="currency-eur" size={20} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
+                Precio: {event.price} €
+              </Text>
+            </View>
+          )}
+
+          {event.capacityPerDay != null && (
+            <View style={eventDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="account-multiple" size={20} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
+                Capacidad diaria: {event.capacityPerDay} personas
               </Text>
             </View>
           )}
