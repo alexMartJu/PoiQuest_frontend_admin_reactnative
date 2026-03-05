@@ -157,6 +157,16 @@ export default function DrawerLayout() {
           ),
         }}
       />
+      <Drawer.Screen
+        name="partners"
+        options={{
+          drawerLabel: 'Partners',
+          title: 'Partners',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="handshake" color={color} size={size} />
+          ),
+        }}
+      />
     </Drawer>
   );
 }
