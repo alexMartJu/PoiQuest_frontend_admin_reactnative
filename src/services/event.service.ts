@@ -6,6 +6,7 @@ import type {
   CreateEventDto,
   UpdateEventDto,
   EventCategory,
+  EventAdminFilter,
 } from '@/types/Event';
 
 // ================== EVENT SERVICE ==================
@@ -101,5 +102,22 @@ export const getFinishedEventDetail = async (uuid: string): Promise<Event> => {
  */
 export const getEventCategories = async (): Promise<EventCategory[]> => {
   const response = await apiClient.get<EventCategory[]>(CATEGORY_ENDPOINTS.LIST);
+  return response.data;
+};
+
+export const getAdminEvents = async (filter: EventAdminFilter, cursor?: string, limit?: number): Promise<PaginatedEventsResponse> => {
+  const params: any = { filter, limit: limit || PAGINATION.DEFAULT_LIMIT };
+  if (cursor) params.cursor = cursor;
+  const response = await apiClient.get<PaginatedEventsResponse>(EVENT_ENDPOINTS.ADMIN_LIST, { params });
+  return response.data;
+};
+
+export const getAdminEventDetail = async (uuid: string): Promise<Event> => {
+  const response = await apiClient.get<Event>(EVENT_ENDPOINTS.ADMIN_DETAIL(uuid));
+  return response.data;
+};
+
+export const activateEvent = async (uuid: string): Promise<Event> => {
+  const response = await apiClient.patch<Event>(EVENT_ENDPOINTS.ACTIVATE(uuid));
   return response.data;
 };

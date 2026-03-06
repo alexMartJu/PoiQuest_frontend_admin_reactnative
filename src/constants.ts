@@ -43,6 +43,9 @@ export const EVENT_ENDPOINTS = {
   DELETE: (uuid: string) => `/events/${uuid}`,
   FINISHED: '/events/finished',
   FINISHED_DETAIL: (uuid: string) => `/events/finished/${uuid}`,
+  ADMIN_LIST: '/events/admin',
+  ADMIN_DETAIL: (uuid: string) => `/events/admin/${uuid}`,
+  ACTIVATE: (uuid: string) => `/events/${uuid}/activate`,
 } as const;
 
 // Endpoints de categorías de eventos

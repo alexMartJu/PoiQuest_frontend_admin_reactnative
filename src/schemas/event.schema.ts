@@ -25,10 +25,19 @@ export const createEventSchema = z
     organizerUuid: z
       .string({ required_error: 'El organizador es obligatorio' })
       .uuid('UUID de organizador inválido'),
-    sponsorUuid: z.string().uuid('UUID de patrocinador inválido').optional().nullable(),
+    sponsorUuid: z.preprocess(
+      (v) => (v === '' ? null : v),
+      z.string().uuid('UUID de patrocinador inválido').nullable().optional(),
+    ),
     isPremium: z.boolean({ required_error: 'Indica si el evento es premium' }),
-    price: z.number().min(0, 'El precio no puede ser negativo').optional().nullable(),
-    capacityPerDay: z.number().int().positive('La capacidad debe ser un entero positivo').optional().nullable(),
+    price: z.preprocess(
+      (v) => (v == null || v === '' ? null : Number(v)),
+      z.number().min(0, 'El precio no puede ser negativo').nullable().optional(),
+    ),
+    capacityPerDay: z.preprocess(
+      (v) => (v == null || v === '' ? null : Number(v)),
+      z.number().int().positive('La capacidad debe ser un entero positivo').nullable().optional(),
+    ),
     startDate: dateStringSchema,
     endDate: dateStringSchema.optional().nullable(),
     imageFileNames: z
@@ -67,10 +76,19 @@ export const updateEventSchema = z
     categoryUuid: z.string().uuid('UUID de categoría inválido').optional(),
     cityUuid: z.string().uuid('UUID de ciudad inválido').optional(),
     organizerUuid: z.string().uuid('UUID de organizador inválido').optional(),
-    sponsorUuid: z.string().uuid('UUID de patrocinador inválido').optional().nullable(),
+    sponsorUuid: z.preprocess(
+      (v) => (v === '' ? null : v),
+      z.string().uuid('UUID de patrocinador inválido').nullable().optional(),
+    ),
     isPremium: z.boolean().optional(),
-    price: z.number().min(0, 'El precio no puede ser negativo').optional().nullable(),
-    capacityPerDay: z.number().int().positive('La capacidad debe ser un entero positivo').optional().nullable(),
+    price: z.preprocess(
+      (v) => (v == null || v === '' ? null : Number(v)),
+      z.number().min(0, 'El precio no puede ser negativo').nullable().optional(),
+    ),
+    capacityPerDay: z.preprocess(
+      (v) => (v == null || v === '' ? null : Number(v)),
+      z.number().int().positive('La capacidad debe ser un entero positivo').nullable().optional(),
+    ),
     startDate: dateStringSchema.optional(),
     endDate: dateStringSchema.optional().nullable(),
     imageFileNames: z

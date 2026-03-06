@@ -1,8 +1,16 @@
 // ================== EVENT TYPES ==================
 
 export enum EventStatus {
+  PENDING = 'pending',
   ACTIVE = 'active',
   FINISHED = 'finished',
+}
+
+export enum EventAdminFilter {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  FINISHED = 'finished',
+  DELETED = 'deleted',
 }
 
 export interface EventCategory {
