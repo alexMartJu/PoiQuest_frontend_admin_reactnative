@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createEvent, updateEvent, deleteEvent } from '@/services/event.service';
-import { eventsQueryKey, eventDetailQueryKey } from '../queryKeys';
+import { createEvent, updateEvent, deleteEvent, activateEvent } from '@/services/event.service';
+import { eventsQueryKey, eventDetailQueryKey, adminEventsQueryKey, adminEventDetailQueryKey } from '../queryKeys';
 import type { CreateEventDto, UpdateEventDto } from '@/types/Event';
 
 /**
@@ -23,11 +23,8 @@ export function useCreateEventMutation() {
   return useMutation({
     mutationFn: (data: CreateEventDto) => createEvent(data),
     onSuccess: () => {
-      // Resetear la infinite query para volver a la primera página
-      // Esto es necesario porque los eventos se ordenan ASC por createdAt,
-      // y el nuevo evento tendría un createdAt reciente (estaría en páginas posteriores).
-      // resetQueries elimina el caché y fuerza un refetch completo desde la primera página.
       queryClient.resetQueries({ queryKey: eventsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: adminEventsQueryKey('pending') });
     },
   });
 }
@@ -54,11 +51,11 @@ export function useUpdateEventMutation() {
     mutationFn: ({ uuid, data }: { uuid: string; data: UpdateEventDto }) =>
       updateEvent(uuid, data),
     onSuccess: (updatedEvent) => {
-      // Invalidar el detalle del evento
       queryClient.invalidateQueries({ queryKey: eventDetailQueryKey(updatedEvent.uuid) });
-      // Para updates, invalidateQueries es suficiente porque el evento ya existe en la lista
-      // y solo cambian sus datos, no su posición (createdAt no cambia)
+      queryClient.invalidateQueries({ queryKey: adminEventDetailQueryKey(updatedEvent.uuid) });
       queryClient.invalidateQueries({ queryKey: eventsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: adminEventsQueryKey('pending') });
+      queryClient.invalidateQueries({ queryKey: adminEventsQueryKey('active') });
     },
   });
 }
@@ -84,14 +81,56 @@ export function useDeleteEventMutation() {
   return useMutation<void, unknown, string>({
     mutationFn: (uuid: string) => deleteEvent(uuid),
     onSuccess: (_data: void, uuid: string) => {
-      // Eliminar la query de detalle de este UUID para evitar refetch que cause 404
       try {
         queryClient.removeQueries({ queryKey: eventDetailQueryKey(uuid), exact: true });
+        queryClient.removeQueries({ queryKey: adminEventDetailQueryKey(uuid), exact: true });
       } catch (e) {
-        // ignore removal errors silently in dev
+        // ignore removal errors silently
       }
-      // Invalidar la lista de eventos (solo la lista)
+      // Remove the deleted event from any cached admin list pages so the UI updates immediately
+      const adminFilters = ['pending', 'active', 'finished', 'deleted'] as const;
+      adminFilters.forEach((filter) => {
+        try {
+          queryClient.setQueryData<any>(
+            adminEventsQueryKey(filter),
+            (old: any) => {
+              if (!old || !old.pages) return old;
+              const newPages = old.pages.map((page: any) => ({
+                ...page,
+                data: page.data?.filter((item: any) => item.uuid !== uuid) ?? [],
+              }));
+              return { ...old, pages: newPages };
+            },
+          );
+        } catch (e) {
+          // ignore per-filter update errors
+        }
+      });
+
+      // Also invalidate to ensure server-state consistency
       queryClient.invalidateQueries({ queryKey: eventsQueryKey(), exact: true });
+      adminFilters.forEach((filter) => queryClient.invalidateQueries({ queryKey: adminEventsQueryKey(filter) }));
+    },
+  });
+}
+
+/**
+ * Hook para activar un evento pendiente (PENDING → ACTIVE)
+ *
+ * Al completarse exitosamente, invalida automáticamente:
+ * - La lista admin de eventos pendientes
+ * - La lista admin de eventos activos
+ * - El detalle admin del evento
+ */
+export function useActivateEventMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (uuid: string) => activateEvent(uuid),
+    onSuccess: (activatedEvent) => {
+      queryClient.invalidateQueries({ queryKey: adminEventsQueryKey('pending') });
+      queryClient.invalidateQueries({ queryKey: adminEventsQueryKey('active') });
+      queryClient.invalidateQueries({ queryKey: adminEventDetailQueryKey(activatedEvent.uuid) });
     },
   });
 }

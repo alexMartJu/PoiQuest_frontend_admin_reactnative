@@ -42,7 +42,7 @@ export function AnimatedFABApp({
 const staticStyles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 50,
     borderRadius: 16,
   },
 });

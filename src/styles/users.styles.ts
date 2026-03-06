@@ -7,17 +7,17 @@ export const usersStaticStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  filterBar: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  segmentedSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  filterRow: {
+  countRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingRight: 16,
-    paddingBottom: 8,
-  },
-  filterChips: {
-    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 2,
   },
   listContent: {
     paddingHorizontal: 16,
@@ -39,9 +39,8 @@ export const getUsersStyles = (theme: AppTheme) =>
     container: {
       backgroundColor: theme.colors.background,
     },
-    filterBar: {
+    segmentedSection: {
       backgroundColor: theme.colors.surface,
-      borderBottomColor: theme.colors.outlineVariant,
     },
     listContent: {
       backgroundColor: theme.colors.background,

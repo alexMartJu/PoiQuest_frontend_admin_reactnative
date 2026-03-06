@@ -7,9 +7,14 @@ export const poisEventsStaticStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  listContent: {
+  segmentedSection: {
     paddingHorizontal: 16,
     paddingTop: 12,
+    paddingBottom: 4,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   emptyContainer: {
@@ -25,6 +30,9 @@ export const getPoisEventsStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       backgroundColor: theme.colors.background,
+    },
+    segmentedSection: {
+      backgroundColor: theme.colors.surface,
     },
     listContent: {
       backgroundColor: theme.colors.background,

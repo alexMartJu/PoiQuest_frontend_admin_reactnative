@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import { useAppTheme } from '@/providers/ThemeProvider';
 
@@ -11,6 +11,8 @@ import { useAppTheme } from '@/providers/ThemeProvider';
 export interface SegmentedButtonOption<T extends string = string> {
   value: T;
   label: string;
+  /** Etiqueta corta para móvil. Si no se define, usa label. */
+  shortLabel?: string;
   icon?: string;
 }
 
@@ -30,9 +32,12 @@ export function SegmentedButtonGroupApp<T extends string = string>({
   style,
 }: SegmentedButtonGroupAppProps<T>) {
   const theme = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+
   const buttons = options.map((opt) => ({
     value: opt.value,
-    label: opt.label,
+    label: !isTablet && opt.shortLabel ? opt.shortLabel : opt.label,
     icon: opt.icon,
     showSelectedCheck: false,
     buttonColor: theme.colors.secondary,

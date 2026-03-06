@@ -37,6 +37,20 @@ export const eventsByCategoryQueryKey = (categoryUuid: string, cursor?: string |
     ? (['events', 'category', categoryUuid, { cursor }] as const)
     : (['events', 'category', categoryUuid] as const);
 
+// ================== ADMIN EVENTS ==================
+
+/**
+ * Lista de eventos admin filtrada por estado
+ * @param filter - Estado del filtro: pending | active | finished | deleted
+ */
+export const adminEventsQueryKey = (filter: string) => ['events', 'admin', filter] as const;
+
+/**
+ * Detalle de un evento desde el endpoint admin (cualquier estado)
+ * @param uuid - UUID del evento
+ */
+export const adminEventDetailQueryKey = (uuid: string) => ['events', 'admin', uuid] as const;
+
 // ================== FINISHED EVENTS ==================
 
 /**

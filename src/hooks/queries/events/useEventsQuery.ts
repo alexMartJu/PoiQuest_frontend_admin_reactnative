@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { getEvents } from '@/services/event.service';
-import { eventsQueryKey } from '../queryKeys';
+import { getEvents, getAdminEvents } from '@/services/event.service';
+import { eventsQueryKey, adminEventsQueryKey } from '../queryKeys';
+import type { EventAdminFilter } from '@/types/Event';
 
 /**
  * Hook para obtener la lista de eventos con paginación infinita (scroll)
@@ -39,6 +40,20 @@ export function useEventsInfiniteQuery(limit: number = 5) {
     // Los datos son frescos durante 1 minuto (evita refetches innecesarios)
     staleTime: 1000 * 60,
     // Refrescar automáticamente cuando la app vuelve al primer plano
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAdminEventsInfiniteQuery(filter: EventAdminFilter, limit: number = 5) {
+  return useInfiniteQuery({
+    queryKey: adminEventsQueryKey(filter),
+    queryFn: ({ pageParam }) => getAdminEvents(filter, pageParam, limit),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.hasNextPage ? lastPage.nextCursor ?? undefined : undefined;
+    },
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60,
     refetchOnWindowFocus: true,
   });
 }
