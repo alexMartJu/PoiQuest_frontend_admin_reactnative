@@ -11,7 +11,7 @@ import type { AppTheme } from '@/theme';
 import { createPoiSchema, updatePoiSchema, CreatePoiFormValues, UpdatePoiFormValues } from '@/schemas/poi.schema';
 import { PointOfInterest } from '@/types/PointOfInterest';
 import { useCreatePoiMutation, useUpdatePoiMutation } from '@/hooks/queries/pois';
-import { useEventDetailQuery } from '@/hooks/queries/events';
+import { useAdminEventDetailQuery } from '@/hooks/queries/events';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { router } from 'expo-router';
 import { pickImageFromLibrary } from '@/utils/pickImage';
@@ -46,7 +46,7 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
   const showSnackbar = useSnackbarStore((state) => state.show);
 
   // Obtener el nombre del evento cuando se está creando
-  const { data: eventDetail, isLoading: isLoadingEvent } = useEventDetailQuery(eventUuid, isCreating && !!eventUuid);
+  const { data: eventDetail, isLoading: isLoadingEvent } = useAdminEventDetailQuery(eventUuid, isCreating && !!eventUuid);
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 

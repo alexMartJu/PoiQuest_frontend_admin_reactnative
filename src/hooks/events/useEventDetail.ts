@@ -1,40 +1,43 @@
 import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEventDetailQuery } from '../queries/events/useEventDetailQuery';
-import { useDeleteEventMutation } from '../queries/events/useEventMutations';
+import { useAdminEventDetailQuery } from '../queries/events/useEventDetailQuery';
+import { useDeleteEventMutation, useActivateEventMutation } from '../queries/events/useEventMutations';
+import { useSnackbarStore } from '@/stores/snackbar.store';
 
 export function useEventDetail() {
   const { uuid } = useLocalSearchParams<{ uuid?: string }>();
 
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [activateConfirmVisible, setActivateConfirmVisible] = useState(false);
 
-  // Usar React Query para obtener el detalle del evento
-  const {
-    data: event,
-    isLoading,
-    isError,
-  } = useEventDetailQuery(uuid);
-
-  // Usar React Query para eliminar evento
+  const { data: event, isLoading } = useAdminEventDetailQuery(uuid);
   const deleteMutation = useDeleteEventMutation();
+  const activateMutation = useActivateEventMutation();
+  const showSnackbar = useSnackbarStore((state) => state.show);
 
   const handleDeleteEvent = async () => {
     if (!event) return;
-
     try {
       setConfirmVisible(false);
-
       await deleteMutation.mutateAsync(event.uuid);
-
-      // Volver al listado
       router.back();
-    } catch (error) {
-      console.error('Error al eliminar evento:', error);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'No se pudo eliminar el evento';
+      showSnackbar({ message, variant: 'error' });
     }
   };
 
-  const handleCancelCreate = () => {
-    router.back();
+  const handleActivateEvent = async () => {
+    if (!event) return;
+    try {
+      setActivateConfirmVisible(false);
+      await activateMutation.mutateAsync(event.uuid);
+      showSnackbar({ message: 'Evento activado correctamente', variant: 'success' });
+      router.back();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'No se pudo activar el evento';
+      showSnackbar({ message, variant: 'error' });
+    }
   };
 
   return {
@@ -42,8 +45,12 @@ export function useEventDetail() {
     isLoading,
     confirmVisible,
     setConfirmVisible,
+    activateConfirmVisible,
+    setActivateConfirmVisible,
     isDeleting: deleteMutation.isPending,
+    isActivating: activateMutation.isPending,
     handleDeleteEvent,
-    handleCancelCreate,
+    handleActivateEvent,
   };
 }
+

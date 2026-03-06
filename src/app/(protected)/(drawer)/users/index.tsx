@@ -18,11 +18,11 @@ import {
 import { UserCardApp } from '@/components/users';
 import {
   AnimatedFABApp,
-  ChipFilterApp,
   CommonDialogApp,
   CountBadgeApp,
+  SegmentedButtonGroupApp,
+  type SegmentedButtonOption,
 } from '@/components/common';
-import type { ChipFilterOption } from '@/components/common';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import type { BackendUser } from '@/types/User';
 import { usersStaticStyles, getUsersStyles } from '@/styles/users.styles';
@@ -30,7 +30,7 @@ import { usersStaticStyles, getUsersStyles } from '@/styles/users.styles';
 // ================== CHIP OPTIONS ==================
 type UserFilter = 'active' | 'disabled';
 
-const CHIP_OPTIONS: ChipFilterOption<UserFilter>[] = [
+const FILTER_OPTIONS: SegmentedButtonOption<UserFilter>[] = [
   { value: 'active', label: 'Activos', icon: 'account-check' },
   { value: 'disabled', label: 'Deshabilitados', icon: 'account-cancel' },
 ];
@@ -216,24 +216,25 @@ export default function UsersScreen() {
   return (
     <View style={[usersStaticStyles.container, themed.container]}>
       {/* ── Barra de filtros ── */}
-      <View style={[usersStaticStyles.filterBar, themed.filterBar]}>
-        <View style={usersStaticStyles.filterRow}>
-          <View style={usersStaticStyles.filterChips}>
-            <ChipFilterApp<UserFilter>
-              options={CHIP_OPTIONS}
-              selected={filter}
-              onSelect={setFilter}
-            />
-          </View>
-          {!isLoading && (
-            <CountBadgeApp
-              count={users.length}
-              label={filter === 'active' ? 'usuarios' : 'bloqueados'}
-              icon="account-group"
-            />
-          )}
-        </View>
+      <View style={[usersStaticStyles.segmentedSection, themed.segmentedSection]}>
+        <SegmentedButtonGroupApp<UserFilter>
+          options={FILTER_OPTIONS}
+          selected={filter}
+          onSelect={setFilter}
+          density="small"
+        />
       </View>
+
+      {/* ── Contador ── */}
+      {!isLoading && (
+        <View style={usersStaticStyles.countRow}>
+          <CountBadgeApp
+            count={users.length}
+            label={filter === 'active' ? 'usuarios' : 'bloqueados'}
+            icon="account-group"
+          />
+        </View>
+      )}
 
       {/* ── Lista de usuarios ── */}
       <FlatList

@@ -17,8 +17,12 @@ export default function EventDetailScreen() {
     isLoading,
     confirmVisible,
     setConfirmVisible,
+    activateConfirmVisible,
+    setActivateConfirmVisible,
     isDeleting,
+    isActivating,
     handleDeleteEvent,
+    handleActivateEvent,
   } = useEventDetail();
 
   if (isLoading) {
@@ -48,21 +52,35 @@ export default function EventDetailScreen() {
           Detalle del evento
         </Text>
         <View style={eventDetailStaticStyles.headerActions}>
-          <IconButton
-            icon="pencil-outline"
-            size={22}
-            iconColor={theme.colors.primary}
-            onPress={() => router.push(`/(protected)/(drawer)/events/${event.uuid}/edit`)}
-            accessibilityLabel="Editar evento"
-          />
-          <IconButton
-            icon="delete-outline"
-            size={22}
-            iconColor={theme.colors.error}
-            onPress={() => setConfirmVisible(true)}
-            accessibilityLabel="Eliminar evento"
-            disabled={isDeleting}
-          />
+          {event.status !== 'finished' && (
+            <IconButton
+              icon="pencil-outline"
+              size={22}
+              iconColor={theme.colors.primary}
+              onPress={() => router.push(`/(protected)/(drawer)/events/${event.uuid}/edit`)}
+              accessibilityLabel="Editar evento"
+            />
+          )}
+          {event.status !== 'finished' && (
+            <IconButton
+              icon="delete-outline"
+              size={22}
+              iconColor={theme.colors.error}
+              onPress={() => setConfirmVisible(true)}
+              accessibilityLabel="Eliminar evento"
+              disabled={isDeleting}
+            />
+          )}
+          {event.status === 'pending' && (
+            <IconButton
+              icon="check-circle-outline"
+              size={22}
+              iconColor={theme.colors.secondary}
+              onPress={() => setActivateConfirmVisible(true)}
+              accessibilityLabel="Activar evento"
+              disabled={isActivating}
+            />
+          )}
         </View>
       </View>
 
@@ -182,12 +200,26 @@ export default function EventDetailScreen() {
 
           <View style={eventDetailStaticStyles.infoRow}>
             <MaterialCommunityIcons
-              name={event.status === 'active' ? 'check-circle' : 'clock-outline'}
+              name={
+                event.status === 'active' ? 'check-circle' :
+                event.status === 'pending' ? 'clock-outline' :
+                event.status === 'finished' ? 'calendar-end' :
+                'delete-outline'
+              }
               size={20}
-              color={event.status === 'active' ? theme.colors.primary : theme.colors.onSurfaceVariant}
+              color={
+                event.status === 'active' ? theme.colors.primary :
+                event.status === 'pending' ? theme.colors.secondary :
+                theme.colors.onSurfaceVariant
+              }
             />
             <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}> 
-              Estado: {event.status === 'active' ? 'Activo' : 'Finalizado'}
+              Estado: {
+                event.status === 'active' ? 'Activo' :
+                event.status === 'pending' ? 'Pendiente' :
+                event.status === 'finished' ? 'Finalizado' :
+                'Eliminado'
+              }
             </Text>
           </View>
         </View>
@@ -245,6 +277,25 @@ export default function EventDetailScreen() {
         onConfirm={handleDeleteEvent}
         cancelDisabled={isDeleting}
         confirmLoading={isDeleting}
+      />
+
+      {/* Diálogo de confirmación de activación */}
+      <CommonDialogApp
+        visible={activateConfirmVisible}
+        title="Activar evento"
+        message={
+          <Text>
+            ¿Seguro que deseas activar el evento{' '}
+            <Text style={{ fontWeight: '700' }}>{event.name}</Text>? El evento será visible para los usuarios.
+          </Text>
+        }
+        cancelText="Cancelar"
+        confirmText="Activar"
+        onCancel={() => setActivateConfirmVisible(false)}
+        onConfirm={handleActivateEvent}
+        cancelDisabled={isActivating}
+        confirmLoading={isActivating}
+        confirmVariant="secondary"
       />
     </View>
   );
