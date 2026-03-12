@@ -68,6 +68,11 @@ export interface PointOfInterest {
   updatedAt: Date;
 }
 
+export interface RouteSummary {
+  uuid: string;
+  name: string;
+}
+
 export interface Event {
   uuid: string;
   name: string;
@@ -84,6 +89,7 @@ export interface Event {
   endDate: string | null; // YYYY-MM-DD
   images: ImageItem[];
   pointsOfInterest?: PointOfInterest[];
+  routes?: RouteSummary[];
   createdAt: Date;
   updatedAt: Date;
 }

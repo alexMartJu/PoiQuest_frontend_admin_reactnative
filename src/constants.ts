@@ -80,6 +80,15 @@ export const POI_ENDPOINTS = {
   DELETE: (uuid: string) => `/points-of-interest/${uuid}`,
 } as const;
 
+// Endpoints de rutas
+export const ROUTE_ENDPOINTS = {
+  BY_EVENT: (eventUuid: string) => `/routes/event/${eventUuid}`,
+  DETAIL: (uuid: string) => `/routes/${uuid}`,
+  CREATE: '/routes',
+  UPDATE: (uuid: string) => `/routes/${uuid}`,
+  DELETE: (uuid: string) => `/routes/${uuid}`,
+} as const;
+
 // Endpoints de partners (ciudades, organizadores, patrocinadores)
 export const PARTNER_ENDPOINTS = {
   // Ciudades

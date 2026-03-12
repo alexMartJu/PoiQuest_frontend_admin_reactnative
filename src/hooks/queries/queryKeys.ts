@@ -116,3 +116,18 @@ export const sponsorDetailQueryKey = (uuid: string) => ['sponsors', uuid] as con
 
 export const allActiveSponsorsQueryKey = ['sponsors', 'all-active'] as const;
 
+// ================== ROUTES ==================
+
+/**
+ * Rutas de un evento por UUID del evento
+ * @param eventUuid - UUID del evento
+ */
+export const routesByEventQueryKey = (eventUuid: string) =>
+  ['routes', 'event', eventUuid] as const;
+
+/**
+ * Detalle de una ruta específica
+ * @param uuid - UUID de la ruta
+ */
+export const routeDetailQueryKey = (uuid: string) => ['routes', uuid] as const;
+
