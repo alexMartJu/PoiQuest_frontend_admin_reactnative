@@ -148,12 +148,12 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="users"
+        name="routes"
         options={{
-          drawerLabel: 'Usuarios',
-          title: 'Usuarios',
+          drawerLabel: 'Rutas',
+          title: 'Rutas',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+            <MaterialCommunityIcons name="map-marker-path" color={color} size={size} />
           ),
         }}
       />
@@ -164,6 +164,16 @@ export default function DrawerLayout() {
           title: 'Partners',
           drawerIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="handshake" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="users"
+        options={{
+          drawerLabel: 'Usuarios',
+          title: 'Usuarios',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
         }}
       />

@@ -259,6 +259,23 @@ export default function EventDetailScreen() {
             ))}
           </View>
         )}
+
+        {/* Rutas */}
+        {event.routes && event.routes.length > 0 && (
+          <View style={[eventDetailStaticStyles.card, themed.card]}>
+            <Text variant="titleMedium" style={[eventDetailStaticStyles.sectionTitle, themed.sectionTitle]}>
+              Rutas ({event.routes.length})
+            </Text>
+            {event.routes.map((route) => (
+              <View key={route.uuid} style={eventDetailStaticStyles.poiItem}>
+                <MaterialCommunityIcons name="map-marker-path" size={18} color={theme.colors.primary} />
+                <Text variant="bodyMedium" style={[eventDetailStaticStyles.infoText, themed.infoText]}>
+                  {route.name}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* Diálogo de confirmación de eliminación */}
