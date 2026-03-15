@@ -15,9 +15,10 @@ export interface RoutePoiItem {
   title: string;
   author: string | null;
   description: string | null;
-  multimedia: Record<string, any> | null;
+  interestingData: string | null;
+  modelFileName: string | null;
+  modelUrl: string | null;
   qrCode: string;
-  nfcTag: string | null;
   coordX: number | null;
   coordY: number | null;
   images?: RoutePoiImage[] | null;
