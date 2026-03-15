@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, ScrollView, Pressable, Image } from 'react-native';
 import { Text, IconButton, Divider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import { usePoiDetail } from '@/hooks/pois/usePoiDetail';
-import { PoiMapViewer } from '@/components/pois';
+import { PoiMapViewer, ARViewerModal, QRCodeModal } from '@/components/pois';
 import { CommonDialogApp } from '@/components/common';
 import { poiDetailStaticStyles, getPoiDetailStyles } from '@/styles/pois.styles';
 
@@ -14,6 +14,12 @@ export default function PoiDetailScreen() {
   const themed = useMemo(() => getPoiDetailStyles(theme), [theme]);
   const router = useRouter();
   const { eventUuid } = useLocalSearchParams<{ eventUuid: string }>();
+  const [
+    arModalVisible, setArModalVisible
+  ] = useState(false);
+  const [
+    qrModalVisible, setQrModalVisible
+  ] = useState(false);
   const {
     poi,
     isLoading,
@@ -49,6 +55,21 @@ export default function PoiDetailScreen() {
           Detalle del POI
         </Text>
         <View style={poiDetailStaticStyles.headerActions}>
+          <IconButton
+            icon="cube-scan"
+            size={22}
+            iconColor={poi.modelUrl ? theme.colors.secondary : theme.colors.onSurfaceVariant}
+            onPress={() => setArModalVisible(true)}
+            accessibilityLabel="Ver modelo AR"
+            disabled={!poi.modelUrl}
+          />
+          <IconButton
+            icon="qrcode"
+            size={22}
+            iconColor={theme.colors.primary}
+            onPress={() => setQrModalVisible(true)}
+            accessibilityLabel="Descargar código QR"
+          />
           <IconButton
             icon="pencil-outline"
             size={22}
@@ -114,15 +135,6 @@ export default function PoiDetailScreen() {
             </Text>
           </View>
 
-          {poi.nfcTag && (
-            <View style={poiDetailStaticStyles.infoRow}>
-              <MaterialCommunityIcons name="nfc" size={20} color={theme.colors.onSurfaceVariant} />
-              <Text variant="bodyMedium" style={[poiDetailStaticStyles.infoText, themed.infoText]}>
-                NFC: {poi.nfcTag}
-              </Text>
-            </View>
-          )}
-
           {poi.coordX !== null && poi.coordY !== null && (
             <View style={poiDetailStaticStyles.infoRow}>
               <MaterialCommunityIcons name="crosshairs-gps" size={20} color={theme.colors.onSurfaceVariant} />
@@ -131,7 +143,31 @@ export default function PoiDetailScreen() {
               </Text>
             </View>
           )}
+
+          {poi.modelUrl && (
+            <View style={poiDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="cube-outline" size={20} color={theme.colors.secondary} />
+              <Text variant="bodyMedium" style={[poiDetailStaticStyles.infoText, { color: theme.colors.secondary }]}>
+                Modelo 3D disponible
+              </Text>
+            </View>
+          )}
         </View>
+
+        {/* Datos interesantes para AR */}
+        {poi.interestingData && (
+          <View style={[poiDetailStaticStyles.card, themed.card]}>
+            <Text variant="titleMedium" style={[poiDetailStaticStyles.sectionTitle, themed.sectionTitle]}>
+              Datos interesantes
+            </Text>
+            <View style={poiDetailStaticStyles.infoRow}>
+              <MaterialCommunityIcons name="star-shooting" size={20} color={theme.colors.secondary} />
+              <Text variant="bodyMedium" style={[poiDetailStaticStyles.infoText, themed.infoText]}>
+                {poi.interestingData}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Mapa */}
         {poi.coordX !== null && poi.coordY !== null && (
@@ -202,6 +238,24 @@ export default function PoiDetailScreen() {
         onConfirm={handleDeletePoi}
         cancelDisabled={isDeleting}
         confirmLoading={isDeleting}
+      />
+
+      {/* Modal AR */}
+      {poi.modelUrl && (
+        <ARViewerModal
+          visible={arModalVisible}
+          modelUrl={poi.modelUrl}
+          title={poi.title}
+          onDismiss={() => setArModalVisible(false)}
+        />
+      )}
+
+      {/* Modal QR */}
+      <QRCodeModal
+        visible={qrModalVisible}
+        qrCode={poi.qrCode}
+        poiTitle={poi.title}
+        onDismiss={() => setQrModalVisible(false)}
       />
     </View>
   );

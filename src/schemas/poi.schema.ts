@@ -14,11 +14,13 @@ export const createPoiSchema = z.object({
     .trim(),
   author: z.string().max(255, 'El autor no puede tener más de 255 caracteres').optional().nullable(),
   description: z.string().optional().nullable(),
-  qrCode: z
-    .string({ required_error: 'El código QR es obligatorio' })
-    .min(1, 'El código QR no puede estar vacío')
-    .max(255, 'El código QR no puede tener más de 255 caracteres'),
-  nfcTag: z.string().max(255, 'El tag NFC no puede tener más de 255 caracteres').optional().nullable(),
+  interestingData: z
+    .string({ required_error: 'Los datos interesantes son obligatorios' })
+    .min(1, 'Los datos interesantes no pueden estar vacíos'),
+  modelFileName: z
+    .string({ required_error: 'El modelo 3D (.glb) es obligatorio' })
+    .min(1, 'El modelo 3D (.glb) es obligatorio')
+    .max(500),
   coordX: z.number().optional().nullable(),
   coordY: z.number().optional().nullable(),
   imageFileNames: z
@@ -39,12 +41,13 @@ export const updatePoiSchema = z.object({
     .optional(),
   author: z.string().max(255, 'El autor no puede tener más de 255 caracteres').optional().nullable(),
   description: z.string().optional().nullable(),
-  qrCode: z
-    .string()
-    .min(1, 'El código QR no puede estar vacío')
-    .max(255, 'El código QR no puede tener más de 255 caracteres')
-    .optional(),
-  nfcTag: z.string().max(255, 'El tag NFC no puede tener más de 255 caracteres').optional().nullable(),
+  interestingData: z
+    .string({ required_error: 'Los datos interesantes son obligatorios' })
+    .min(1, 'Los datos interesantes no pueden estar vacíos'),
+  modelFileName: z
+    .string({ required_error: 'El modelo 3D (.glb) es obligatorio' })
+    .min(1, 'El modelo 3D (.glb) es obligatorio')
+    .max(500),
   coordX: z.number().optional().nullable(),
   coordY: z.number().optional().nullable(),
   imageFileNames: z

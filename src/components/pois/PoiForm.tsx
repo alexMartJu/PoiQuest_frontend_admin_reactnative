@@ -9,13 +9,14 @@ import { PoiMapPicker } from '@/components/pois/PoiMap';
 import { useAppTheme } from '@/providers/ThemeProvider';
 import type { AppTheme } from '@/theme';
 import { createPoiSchema, updatePoiSchema, CreatePoiFormValues, UpdatePoiFormValues } from '@/schemas/poi.schema';
-import { PointOfInterest } from '@/types/PointOfInterest';
+import { PointOfInterest, CreatePoiDto, UpdatePoiDto } from '@/types/PointOfInterest';
 import { useCreatePoiMutation, useUpdatePoiMutation } from '@/hooks/queries/pois';
 import { useAdminEventDetailQuery } from '@/hooks/queries/events';
 import { useSnackbarStore } from '@/stores/snackbar.store';
 import { router } from 'expo-router';
 import { pickImageFromLibrary } from '@/utils/pickImage';
-import { uploadImage } from '@/services/file.service';
+import { pickModel } from '@/utils/pickDocument';
+import { uploadImage, uploadModel } from '@/services/file.service';
 
 interface PoiFormProps {
   poi?: PointOfInterest | null;
@@ -31,12 +32,22 @@ interface SelectedImage {
   uploaded: boolean;
 }
 
+interface SelectedModel {
+  uri: string;
+  name?: string;
+  fileName?: string;
+  uploaded: boolean;
+}
+
 export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCancel }: PoiFormProps) {
   const theme = useAppTheme();
   const themed = useMemo(() => getPoiFormStyles(theme), [theme]);
 
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
   const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
+  const [selectedModel, setSelectedModel] = useState<SelectedModel | null>(null);
+  const [uploadingModel, setUploadingModel] = useState(false);
+  const [existingModelRemoved, setExistingModelRemoved] = useState(false);
   const [selectedCoordX, setSelectedCoordX] = useState<number | null>(poi?.coordX ?? null);
   const [selectedCoordY, setSelectedCoordY] = useState<number | null>(poi?.coordY ?? null);
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -67,8 +78,8 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
           title: '',
           author: '',
           description: '',
-          qrCode: '',
-          nfcTag: '',
+          interestingData: '',
+          modelFileName: '',
           coordX: null,
           coordY: null,
           imageFileNames: [],
@@ -77,8 +88,8 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
           title: poi?.title || '',
           author: poi?.author || '',
           description: poi?.description || '',
-          qrCode: poi?.qrCode || '',
-          nfcTag: poi?.nfcTag || '',
+          interestingData: poi?.interestingData || '',
+          modelFileName: poi?.modelFileName || (poi?.modelUrl ? poi.modelFileName ?? '__existing__' : ''),
           coordX: poi?.coordX ?? null,
           coordY: poi?.coordY ?? null,
           imageFileNames: poi?.images?.map(img => img.fileName) || [],
@@ -91,8 +102,8 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
         title: poi.title,
         author: poi.author || '',
         description: poi.description || '',
-        qrCode: poi.qrCode,
-        nfcTag: poi.nfcTag || '',
+        interestingData: poi.interestingData || '',
+        modelFileName: poi.modelFileName || (poi.modelUrl ? '__existing__' : ''),
         coordX: poi.coordX ?? null,
         coordY: poi.coordY ?? null,
         imageFileNames: poi.images?.map(img => img.fileName) || [],
@@ -100,6 +111,8 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
 
       setSelectedCoordX(poi.coordX ?? null);
       setSelectedCoordY(poi.coordY ?? null);
+      setSelectedModel(null);
+      setExistingModelRemoved(false);
 
       if (poi.images && poi.images.length > 0) {
         setSelectedImages(
@@ -170,6 +183,41 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
     }
   };
 
+  const handlePickModel = async () => {
+    try {
+      const asset = await pickModel();
+      if (!asset) return;
+      setSelectedModel({
+        uri: asset.uri,
+        name: asset.name,
+        uploaded: false,
+      });
+    } catch (error: any) {
+      showSnackbar({ message: error?.message || 'No se pudo seleccionar el modelo', variant: 'error' });
+    }
+  };
+
+  const handleUploadModel = async () => {
+    if (!selectedModel || selectedModel.uploaded) return;
+    try {
+      setUploadingModel(true);
+      const response = await uploadModel(selectedModel.uri, selectedModel.name || `model-${Date.now()}.glb`);
+      setSelectedModel(prev => prev ? { ...prev, fileName: response.fileName, uploaded: true } : prev);
+      setValue('modelFileName' as any, response.fileName, { shouldValidate: true });
+      showSnackbar({ message: 'Modelo 3D subido correctamente', variant: 'success' });
+    } catch (error: any) {
+      showSnackbar({ message: error?.message || 'No se pudo subir el modelo', variant: 'error' });
+    } finally {
+      setUploadingModel(false);
+    }
+  };
+
+  const handleRemoveModel = () => {
+    setSelectedModel(null);
+    setExistingModelRemoved(true);
+    setValue('modelFileName' as any, '', { shouldValidate: true });
+  };
+
   const onSubmit = async (data: CreatePoiFormValues | UpdatePoiFormValues) => {
     try {
       if (selectedImages.length === 0) {
@@ -181,19 +229,28 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
         showSnackbar({ message: 'Debes subir todas las imágenes antes de guardar', variant: 'error' });
         return;
       }
+      if (selectedModel && !selectedModel.uploaded) {
+        showSnackbar({ message: 'Debes subir el modelo 3D antes de guardar', variant: 'error' });
+        return;
+      }
       const imageFileNames = selectedImages
         .filter(img => img.fileName)
         .map(img => img.fileName!);
 
-      const payload = {
+      const payload: any = {
         ...data,
         coordX: selectedCoordX,
         coordY: selectedCoordY,
         imageFileNames,
       };
+      if (selectedModel?.fileName) {
+        payload.modelFileName = selectedModel.fileName;
+      } else if (hasExistingModel && poi?.modelFileName) {
+        payload.modelFileName = poi.modelFileName;
+      }
 
       if (isCreating) {
-        await createMutation.mutateAsync(payload as CreatePoiFormValues);
+        await createMutation.mutateAsync(payload as CreatePoiDto);
         showSnackbar({ message: 'Punto de interés creado correctamente', variant: 'success' });
         router.back();
       } else {
@@ -202,7 +259,7 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
         }
         await updateMutation.mutateAsync({
           uuid: poi.uuid,
-          data: payload as UpdatePoiFormValues,
+          data: payload as UpdatePoiDto,
         });
         showSnackbar({ message: 'Punto de interés actualizado correctamente', variant: 'success' });
         if (onSuccess) {
@@ -214,6 +271,8 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
       showSnackbar({ message, variant: 'error' });
     }
   };
+
+  const hasExistingModel = !isCreating && !!(poi?.modelUrl || poi?.modelFileName) && !selectedModel && !existingModelRemoved;
 
   return (
     <ScrollView
@@ -288,38 +347,115 @@ export function PoiForm({ poi, eventUuid, isCreating = false, onSuccess, onCance
 
       <View style={[staticStyles.card, themed.card]}>
         <Text variant="titleMedium" style={[staticStyles.sectionTitle, themed.sectionTitle]}>
-          Identificación
+          Datos para AR
         </Text>
         <Controller
           control={control}
-          name="qrCode"
+          name="interestingData"
           render={({ field: { value, onChange, onBlur } }) => (
             <TextInputApp
-              label="Código QR *"
+              label="Datos interesantes"
               value={value || ''}
               onChangeText={onChange}
               onBlur={onBlur}
-              errorText={errors.qrCode?.message}
-              maxLength={255}
-              autoCapitalize="none"
+              errorText={(errors as any).interestingData?.message}
+              multiline
+              numberOfLines={4}
+              left={<TextInput.Icon icon="star-shooting" color={theme.colors.secondary} forceTextInputFocus={false} />}
             />
           )}
         />
-        <Controller
-          control={control}
-          name="nfcTag"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <TextInputApp
-              label="Tag NFC"
-              value={value || ''}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              errorText={errors.nfcTag?.message}
-              maxLength={255}
-              autoCapitalize="none"
-            />
-          )}
-        />
+      </View>
+
+      <View style={[staticStyles.card, themed.card]}>
+        <Text variant="titleMedium" style={[staticStyles.sectionTitle, themed.sectionTitle]}>
+          Modelo 3D (.glb) *
+        </Text>
+        <Text variant="bodySmall" style={[staticStyles.helperText, themed.helperText]}>
+          Sube un archivo .glb para visualizar el modelo en 3D.
+        </Text>
+        {hasExistingModel && (
+          <View style={staticStyles.imagePreviewContainer}>
+            <View style={staticStyles.modelPlaceholder}>
+              <MaterialCommunityIcons name="cube-outline" size={48} color={theme.colors.primary} />
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Modelo cargado
+              </Text>
+            </View>
+            <View style={staticStyles.imageActions}>
+              <View style={staticStyles.uploadedBadge}>
+                <MaterialCommunityIcons name="check-circle" size={16} color={theme.colors.primary} />
+                <Text variant="bodySmall" style={{ color: theme.colors.primary }}>Subido</Text>
+              </View>
+              <IconButton
+                icon="delete"
+                iconColor={theme.colors.error}
+                size={20}
+                onPress={handleRemoveModel}
+                disabled={uploadingModel || isSaving}
+              />
+            </View>
+          </View>
+        )}
+        {selectedModel && (
+          <View style={staticStyles.imagePreviewContainer}>
+            <View style={staticStyles.modelPlaceholder}>
+              <MaterialCommunityIcons name="cube-outline" size={48} color={theme.colors.onSurfaceVariant} />
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }} numberOfLines={1}>
+                {selectedModel.name || 'Modelo seleccionado'}
+              </Text>
+            </View>
+            <View style={staticStyles.imageActions}>
+              {selectedModel.uploaded ? (
+                <View style={staticStyles.uploadedBadge}>
+                  <MaterialCommunityIcons name="check-circle" size={16} color={theme.colors.primary} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.primary }}>Subido</Text>
+                </View>
+              ) : (
+                <View style={staticStyles.uploadedBadge}>
+                  <MaterialCommunityIcons name="cloud-upload-outline" size={16} color={theme.colors.error} />
+                  <Text variant="bodySmall" style={{ color: theme.colors.error }}>Sin subir</Text>
+                </View>
+              )}
+              {!selectedModel.uploaded && (
+                <ButtonApp
+                  mode="contained"
+                  icon="cloud-upload"
+                  onPress={handleUploadModel}
+                  loading={uploadingModel}
+                  disabled={uploadingModel}
+                  compact
+                  style={{ flex: 1 }}
+                >
+                  Subir
+                </ButtonApp>
+              )}
+              <IconButton
+                icon="delete"
+                iconColor={theme.colors.error}
+                size={20}
+                onPress={handleRemoveModel}
+                disabled={uploadingModel || isSaving}
+              />
+            </View>
+          </View>
+        )}
+        {!hasExistingModel && !selectedModel && (
+          <ButtonApp
+            mode="outlined"
+            icon="cube-send"
+            onPress={handlePickModel}
+            disabled={uploadingModel || isSaving}
+            style={{ marginTop: 4 }}
+          >
+            Seleccionar modelo .glb
+          </ButtonApp>
+        )}
+        {(errors as any).modelFileName?.message && (
+          <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 4 }}>
+            {(errors as any).modelFileName.message}
+          </Text>
+        )}
       </View>
 
       <View style={[staticStyles.card, themed.card]}>
@@ -550,6 +686,14 @@ const staticStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     flex: 1,
+  },
+  modelPlaceholder: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
   },
   coordChip: {
     flexDirection: 'row',
