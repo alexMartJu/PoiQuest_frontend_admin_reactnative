@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform, Image, ImageSourcePropType } from 'react-native';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { router } from 'expo-router';
 import { Card, Text, TextInput } from 'react-native-paper';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAppTheme } from '@/providers/ThemeProvider';
+import { useAppTheme, useThemeContext } from '@/providers/ThemeProvider';
 import { loginStaticStyles, getLoginStyles } from '@/styles/login.styles';
 import { TextInputApp, ButtonApp } from '@/components/common';
 import { loginSchema, LoginFormValues } from '@/schemas/auth.schema';
@@ -16,6 +15,7 @@ import { useSnackbarStore } from '@/stores/snackbar.store';
 export default function LoginScreen() {
   const theme = useAppTheme();
   const themed = useMemo(() => getLoginStyles(theme), [theme]);
+  const { isDark } = useThemeContext();
   const { setUser, setTokens } = useUserStore();
   const showSnackbar = useSnackbarStore((state) => state.show);
   const [showPassword, setShowPassword] = useState(false);
@@ -68,32 +68,22 @@ export default function LoginScreen() {
     }
   };
 
-  // Componente `Logo`: usa un icono por defecto o una imagen pasada por `source`.
-  // Pasar `source` permitirá reemplazar fácilmente el logo en el futuro.
-  const Logo = ({ size = 64, source }: { size?: number; source?: ImageSourcePropType }) => {
+  // Componente `Logo`: muestra el logo según el modo oscuro activo.
+  const Logo = ({ size = 64 }: { size?: number }) => {
     const containerStyle = {
       width: size,
       height: size,
-      borderRadius: size / 2,
       justifyContent: 'center',
       alignItems: 'center',
     } as any;
 
-    if (source) {
-      return (
-        <View style={[containerStyle, { overflow: 'hidden', backgroundColor: 'transparent' }]}>
-          <Image source={source} style={{ width: size, height: size }} resizeMode="cover" />
-        </View>
-      );
-    }
+    const logoSource = isDark
+      ? require('@/assets/images/app_logo_dark.png')
+      : require('@/assets/images/app_logo_light.png');
 
     return (
-      <View style={[containerStyle, themed.logoBackground]}> 
-        <MaterialCommunityIcons
-          name="map-marker-star"
-          size={Math.floor(size * 0.5)}
-          color={theme.colors.onPrimary}
-        />
+      <View style={[containerStyle, { backgroundColor: 'transparent' }]}>
+        <Image source={logoSource} style={{ width: size, height: size }} resizeMode="contain" />
       </View>
     );
   };
