@@ -196,8 +196,8 @@ EXPO_PUBLIC_API_URL=http://<TU_IP_LOCAL>:8000
 
 ```bash
 # 1. Clona el repositorio
-git clone https://github.com/alexMartJu/poiquest_frontend_admin_reactnative.git
-cd poiquest_frontend_admin_reactnative
+git clone https://github.com/alexMartJu/PoiQuest_frontend_admin_reactnative.git
+cd PoiQuest_frontend_admin_reactnative
 
 # 2. Instala las dependencias
 npm install
